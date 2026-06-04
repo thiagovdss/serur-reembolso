@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Serur - Reembolso</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen">
+      <form class="login-card" id="loginForm">
+        <div class="brand login-brand">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <div>
+            <strong>Serur</strong>
+            <span>Reembolso</span>
+          </div>
+        </div>
+        <h1>Serur - Reembolso</h1>
+        <div class="auth-tabs">
+          <button class="secondary active" id="loginMode" type="button">Entrar</button>
+          <button class="secondary" id="signupMode" type="button">Criar conta</button>
+        </div>
+        <p class="small" id="authHint"></p>
+        <label>E-mail<input id="authEmail" required type="email" /></label>
+        <div id="signupFields" class="hidden">
+          <label>Nome<input id="signupName" /></label>
+          <label>Funcao<input id="signupRole" value="Administrador" /></label>
+        </div>
+        <label>Senha<input id="authPassword" required type="password" minlength="6" /></label>
+        <button class="primary" id="authSubmit" type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <div class="app-shell hidden" id="appShell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <div>
+            <strong>Serur</strong>
+            <span>Reembolso</span>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Navegacao principal">
+          <button class="nav-item active" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="clientes">Clientes</button>
+          <button class="nav-item" data-view="atividades">Atividades</button>
+          <button class="nav-item" data-view="distribuicao">Distribuicao mensal</button>
+          <button class="nav-item" data-view="reembolsos">Reembolsos</button>
+          <button class="nav-item" data-view="ferias">Ferias</button>
+          <button class="nav-item" data-view="homeoffice">Home office</button>
+          <button class="nav-item" data-view="documentos">Documentos</button>
+          <button class="nav-item" data-view="equipe">Equipe</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Controle interno</p>
+            <h1 id="pageTitle">Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="user-pill" id="currentUserName"></span>
+            <div class="search-box">
+              <span aria-hidden="true">Buscar</span>
+              <input id="globalSearch" type="search" placeholder="Buscar cliente, atividade ou responsavel" />
+            </div>
+            <button class="icon-button" id="resetData" title="Atualizar dados">A</button>
+            <button class="secondary" id="logout" type="button">Sair</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard">
+          <div class="metrics-grid" id="metricsGrid"></div>
+          <div class="content-grid two">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Atividades em destaque</h2>
+                <span id="todayLabel"></span>
+              </div>
+              <div class="task-board" id="dashboardTasks"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Agenda da equipe</h2>
+                <span>Ferias e home office</span>
+              </div>
+              <div class="timeline" id="teamAgenda"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="clientes">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Clientes</h2>
+                <span id="clientCount"></span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Contato</th>
+                      <th>Responsavel</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="clientsTable"></tbody>
+                </table>
+              </div>
+            </section>
+            <form class="panel form-panel" id="clientForm">
+              <h2>Novo cliente</h2>
+              <label>Nome<input required name="name" /></label>
+              <label>Empresa<input name="company" /></label>
+              <label>E-mail<input type="email" name="email" /></label>
+              <label>Telefone<input name="phone" /></label>
+              <label>Responsavel<input name="owner" /></label>
+              <label>Status<select name="status"><option>Ativo</option><option>Pausado</option><option>Encerrado</option></select></label>
+              <button class="primary" type="submit">Cadastrar cliente</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="atividades">
+          <div class="toolbar">
+            <select id="taskStatusFilter">
+              <option value="">Todos os status</option>
+              <option>Pendente</option>
+              <option>Em andamento</option>
+              <option>Aguardando cliente</option>
+              <option>Concluida</option>
+              <option>Atrasada</option>
+            </select>
+            <select id="taskClientFilter"></select>
+          </div>
+          <div class="content-grid side-form">
+            <section class="activity-layout" id="taskColumns"></section>
+            <form class="panel form-panel" id="taskForm">
+              <h2>Nova atividade</h2>
+              <label>Titulo<input required name="title" /></label>
+              <label>Cliente<select required name="client" id="taskClientSelect"></select></label>
+              <label>Responsaveis<select required multiple name="people" id="taskPeopleSelect"></select></label>
+              <label>Categoria<select name="category"><option>Reembolso</option><option>Atendimento</option><option>Consultoria</option><option>Administrativo</option><option>Financeiro</option></select></label>
+              <label>Prioridade<select name="priority"><option>Media</option><option>Alta</option><option>Urgente</option><option>Baixa</option></select></label>
+              <label>Prazo<input type="date" required name="due" /></label>
+              <label>Status<select name="status"><option>Pendente</option><option>Em andamento</option><option>Aguardando cliente</option><option>Concluida</option></select></label>
+              <label>Descricao<textarea name="description" rows="4"></textarea></label>
+              <button class="primary" type="submit">Criar atividade</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="distribuicao">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Distribuicao mensal por cliente</h2>
+                <span id="assignmentCount"></span>
+              </div>
+              <div class="assignment-grid" id="assignmentGrid"></div>
+            </section>
+            <form class="panel form-panel" id="assignmentForm">
+              <h2>Nova distribuicao</h2>
+              <label>Mes<input required type="month" name="month" /></label>
+              <label>Cliente<select required name="client" id="assignmentClientSelect"></select></label>
+              <label>Responsaveis<select required multiple name="people" id="assignmentPeopleSelect"></select></label>
+              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <button class="primary" type="submit">Salvar distribuicao</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="reembolsos">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Controle de reembolsos</h2>
+                <button class="secondary" id="exportCsv" type="button">Exportar CSV</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Responsavel</th>
+                      <th>Competencia</th>
+                      <th>Valor</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reimbursementsTable"></tbody>
+                </table>
+              </div>
+            </section>
+            <form class="panel form-panel" id="reimbursementForm">
+              <h2>Novo reembolso</h2>
+              <label>Cliente<select required name="client" id="reimbursementClientSelect"></select></label>
+              <label>Responsavel<select required name="person" id="reimbursementPersonSelect"></select></label>
+              <label>Competencia<input required type="month" name="period" /></label>
+              <label>Valor<input required type="number" min="0" step="0.01" name="amount" /></label>
+              <label>Status<select name="status"><option>Pendente</option><option>Em analise</option><option>Pago</option><option>Vencido</option></select></label>
+              <button class="primary" type="submit">Cadastrar reembolso</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="ferias">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Ferias</h2>
+                <span id="vacationCount"></span>
+              </div>
+              <div class="calendar-list" id="vacationList"></div>
+            </section>
+            <form class="panel form-panel" id="vacationForm">
+              <h2>Novo periodo</h2>
+              <label>Colaborador<select required name="person" id="vacationPersonSelect"></select></label>
+              <label>Inicio<input required type="date" name="start" /></label>
+              <label>Fim<input required type="date" name="end" /></label>
+              <label>Status<select name="status"><option>Programada</option><option>Solicitada</option><option>Aprovada</option><option>Concluida</option></select></label>
+              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <button class="primary" type="submit">Registrar ferias</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="homeoffice">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Home office</h2>
+                <span id="homeOfficeCount"></span>
+              </div>
+              <div class="calendar-list" id="homeOfficeList"></div>
+            </section>
+            <form class="panel form-panel" id="homeOfficeForm">
+              <h2>Novo registro</h2>
+              <label>Colaborador<select required name="person" id="homeOfficePersonSelect"></select></label>
+              <label>Data<input required type="date" name="date" /></label>
+              <label>Cliente<select name="client" id="homeOfficeClientSelect"></select></label>
+              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <button class="primary" type="submit">Registrar home office</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="documentos">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Documentos por cliente</h2>
+                <span id="documentCount"></span>
+              </div>
+              <div class="drive-grid" id="documentsGrid"></div>
+            </section>
+            <form class="panel form-panel" id="documentForm">
+              <h2>Novo documento</h2>
+              <label>Cliente<select required name="client" id="documentClientSelect"></select></label>
+              <label>Nome do documento<input required name="name" /></label>
+              <label>Tipo<select name="type"><option>Passo a passo</option><option>Padrao de atividade</option><option>Modelo</option><option>Orientacao</option></select></label>
+              <label>Link ou caminho<input name="link" placeholder="https:// ou pasta interna" /></label>
+              <button class="primary" type="submit">Adicionar documento</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="equipe">
+          <div class="content-grid side-form">
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>Equipe</h2>
+                <span id="teamCount"></span>
+              </div>
+              <div class="team-grid" id="teamGrid"></div>
+            </section>
+            <form class="panel form-panel" id="teamForm">
+              <h2>Novo membro</h2>
+              <label>Nome<input required name="name" /></label>
+              <label>Funcao<input required name="role" /></label>
+              <label>E-mail<input type="email" name="email" /></label>
+              <label>Status<select name="status"><option>Ativo</option><option>Ausente</option><option>Inativo</option></select></label>
+              <button class="primary" type="submit">Cadastrar membro</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
