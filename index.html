@@ -48,7 +48,6 @@
           <button class="nav-item active" data-view="dashboard">Dashboard</button>
           <button class="nav-item" data-view="clientes">Clientes</button>
           <button class="nav-item" data-view="atividades">Atividades</button>
-          <button class="nav-item" data-view="distribuicao">Distribuicao mensal</button>
           <button class="nav-item" data-view="reembolsos">Reembolsos</button>
           <button class="nav-item" data-view="ferias">Ferias</button>
           <button class="nav-item" data-view="homeoffice">Home office</button>
@@ -106,9 +105,11 @@
                   <thead>
                     <tr>
                       <th>Cliente</th>
+                      <th>CPF/CNPJ</th>
                       <th>Contato</th>
                       <th>Responsavel</th>
                       <th>Status</th>
+                      <th>Acoes</th>
                     </tr>
                   </thead>
                   <tbody id="clientsTable"></tbody>
@@ -116,19 +117,29 @@
               </div>
             </section>
             <form class="panel form-panel" id="clientForm">
-              <h2>Novo cliente</h2>
+              <h2 id="clientFormTitle">Novo cliente</h2>
+              <input type="hidden" name="id" />
               <label>Nome<input required name="name" /></label>
+              <label>CPF ou CNPJ<input name="tax_id" placeholder="CPF ou CNPJ do cliente" /></label>
               <label>Empresa<input name="company" /></label>
               <label>E-mail<input type="email" name="email" /></label>
               <label>Telefone<input name="phone" /></label>
               <label>Responsavel<input name="owner" /></label>
               <label>Status<select name="status"><option>Ativo</option><option>Pausado</option><option>Encerrado</option></select></label>
-              <button class="primary" type="submit">Cadastrar cliente</button>
+              <label>Observacoes<textarea name="notes" rows="3"></textarea></label>
+              <div class="form-actions">
+                <button class="secondary hidden" id="cancelClientEdit" type="button">Cancelar</button>
+                <button class="primary" id="clientSubmit" type="submit">Cadastrar cliente</button>
+              </div>
             </form>
           </div>
         </section>
 
         <section class="view" id="atividades">
+          <div class="segment-tabs">
+            <button class="secondary active" data-activity-tab="tasks" type="button">Atividades</button>
+            <button class="secondary" data-activity-tab="assignments" type="button">Distribuicao mensal</button>
+          </div>
           <div class="toolbar">
             <select id="taskStatusFilter">
               <option value="">Todos os status</option>
@@ -155,10 +166,7 @@
               <button class="primary" type="submit">Criar atividade</button>
             </form>
           </div>
-        </section>
-
-        <section class="view" id="distribuicao">
-          <div class="content-grid side-form">
+          <div class="content-grid side-form hidden" id="assignmentTab">
             <section class="panel">
               <div class="panel-heading">
                 <h2>Distribuicao mensal por cliente</h2>
@@ -178,6 +186,7 @@
         </section>
 
         <section class="view" id="reembolsos">
+          <div class="metrics-grid" id="reimbursementMetrics"></div>
           <div class="content-grid side-form">
             <section class="panel">
               <div class="panel-heading">
@@ -188,11 +197,14 @@
                 <table>
                   <thead>
                     <tr>
+                      <th>Competencia</th>
+                      <th>Descricao</th>
                       <th>Cliente</th>
                       <th>Responsavel</th>
-                      <th>Competencia</th>
+                      <th>Vencimento</th>
                       <th>Valor</th>
                       <th>Status</th>
+                      <th>No Doc.</th>
                     </tr>
                   </thead>
                   <tbody id="reimbursementsTable"></tbody>
@@ -201,11 +213,16 @@
             </section>
             <form class="panel form-panel" id="reimbursementForm">
               <h2>Novo reembolso</h2>
+              <label>Competencia<input required type="month" name="period" /></label>
+              <label>Vencimento<input type="date" name="due_date" /></label>
+              <label>Descricao<input required name="description" placeholder="Ex: Custas de distribuicao - Processo no 1234/2024" /></label>
+              <label>Tipo de despesa<select name="expense_type"><option>Custas</option><option>Diligencia</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
               <label>Cliente<select required name="client" id="reimbursementClientSelect"></select></label>
               <label>Responsavel<select required name="person" id="reimbursementPersonSelect"></select></label>
-              <label>Competencia<input required type="month" name="period" /></label>
               <label>Valor<input required type="number" min="0" step="0.01" name="amount" /></label>
               <label>Status<select name="status"><option>Pendente</option><option>Em analise</option><option>Pago</option><option>Vencido</option></select></label>
+              <label>No Documento / NF / Recibo<input name="document_number" placeholder="Ex: NF-001234" /></label>
+              <label>Observacoes<textarea name="notes" rows="3"></textarea></label>
               <button class="primary" type="submit">Cadastrar reembolso</button>
             </form>
           </div>
@@ -237,17 +254,20 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Home office</h2>
-                <span id="homeOfficeCount"></span>
+                <span>10 baias disponiveis na sala</span>
               </div>
+              <div class="desk-grid" id="deskGrid"></div>
+              <h2 class="section-subtitle">Registros e trocas</h2>
               <div class="calendar-list" id="homeOfficeList"></div>
             </section>
             <form class="panel form-panel" id="homeOfficeForm">
-              <h2>Novo registro</h2>
+              <h2>Novo ajuste</h2>
               <label>Colaborador<select required name="person" id="homeOfficePersonSelect"></select></label>
               <label>Data<input required type="date" name="date" /></label>
+              <label>Tipo<select name="action_type"><option>Home office extra</option><option>Presencial extra</option><option>Troca de dia</option><option>Consulta de vaga</option></select></label>
               <label>Cliente<select name="client" id="homeOfficeClientSelect"></select></label>
               <label>Observacao<textarea name="note" rows="3"></textarea></label>
-              <button class="primary" type="submit">Registrar home office</button>
+              <button class="primary" type="submit">Registrar ajuste</button>
             </form>
           </div>
         </section>
@@ -286,6 +306,7 @@
               <label>Nome<input required name="name" /></label>
               <label>Funcao<input required name="role" /></label>
               <label>E-mail<input type="email" name="email" /></label>
+              <label>Dias fixos de home office<select multiple name="fixed_home_days" id="teamHomeDaysSelect"><option value="1">Segunda</option><option value="2">Terca</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option></select></label>
               <label>Status<select name="status"><option>Ativo</option><option>Ausente</option><option>Inativo</option></select></label>
               <button class="primary" type="submit">Cadastrar membro</button>
             </form>

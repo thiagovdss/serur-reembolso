@@ -25,6 +25,7 @@ const tableNames = {
 
 let state = structuredClone(emptyState);
 let activeView = "dashboard";
+let activeActivityTab = "tasks";
 let authMode = "login";
 let currentUser = null;
 let currentMember = null;
@@ -80,6 +81,15 @@ function personName(id) {
 
 function peopleChips(ids = []) {
   return ids.map((id) => `<span class="chip">${personName(id)}</span>`).join("");
+}
+
+function weekdayName(value) {
+  const names = { 1: "Segunda", 2: "Terca", 3: "Quarta", 4: "Quinta", 5: "Sexta" };
+  return names[String(value)] || value;
+}
+
+function homeDaysText(days = []) {
+  return days.length ? days.map(weekdayName).join(", ") : "Sem dia fixo";
 }
 
 function statusClass(status) {
@@ -158,6 +168,28 @@ async function insertRecord(key, payload) {
   const { data, error } = await db.from(tableNames[key]).insert(payload).select().single();
   if (error) throw error;
   return data;
+}
+
+async function updateRecord(key, id, payload) {
+  if (!hasSupabaseConfig) {
+    state[key] = state[key].map((record) => (record.id === id ? { ...record, ...payload } : record));
+    saveLocalState();
+    return;
+  }
+
+  const { error } = await db.from(tableNames[key]).update(payload).eq("id", id);
+  if (error) throw error;
+}
+
+async function deleteRecord(key, id) {
+  if (!hasSupabaseConfig) {
+    state[key] = state[key].filter((record) => record.id !== id);
+    saveLocalState();
+    return;
+  }
+
+  const { error } = await db.from(tableNames[key]).delete().eq("id", id);
+  if (error) throw error;
 }
 
 async function refreshData() {
@@ -242,16 +274,23 @@ function taskCard(task) {
 
 function renderClients() {
   const rows = state.clients
-    .filter((client) => matchesSearch(`${client.name} ${client.company || ""} ${client.owner || ""}`))
+    .filter((client) => matchesSearch(`${client.name} ${client.company || ""} ${client.owner || ""} ${client.tax_id || ""}`))
     .map((client) => `
       <tr>
         <td><strong>${client.name}</strong><br><span class="small">${client.company || "-"}</span></td>
+        <td>${client.tax_id || "-"}</td>
         <td>${client.email || "-"}<br><span class="small">${client.phone || ""}</span></td>
         <td>${client.owner || "-"}</td>
         <td><span class="badge">${client.status}</span></td>
+        <td>
+          <div class="row-actions">
+            <button type="button" data-edit-client="${client.id}">Editar</button>
+            <button class="danger" type="button" data-delete-client="${client.id}">Excluir</button>
+          </div>
+        </td>
       </tr>
     `);
-  $("#clientsTable").innerHTML = rows.join("") || `<tr><td colspan="4">Nenhum cliente encontrado.</td></tr>`;
+  $("#clientsTable").innerHTML = rows.join("") || `<tr><td colspan="6">Nenhum cliente encontrado.</td></tr>`;
   $("#clientCount").textContent = `${state.clients.length} cadastrados`;
 }
 
@@ -288,15 +327,28 @@ function renderAssignments() {
 }
 
 function renderReimbursements() {
+  const total = state.reimbursements.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pending = state.reimbursements.filter((item) => item.status !== "Pago").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const overdue = state.reimbursements.filter((item) => item.status === "Vencido").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  $("#reimbursementMetrics").innerHTML = [
+    ["Total", money(total)],
+    ["Pendente", money(pending)],
+    ["Vencido", money(overdue)],
+    ["Registros", state.reimbursements.length]
+  ].map(([label, value]) => `<article class="metric"><span>${label}</span><strong>${value}</strong></article>`).join("");
+
   $("#reimbursementsTable").innerHTML = state.reimbursements.map((item) => `
     <tr>
+      <td><span class="badge">${formatMonth(item.period)}</span></td>
+      <td><strong>${item.description || "-"}</strong><br><span class="small">${item.expense_type || "Sem tipo"}</span></td>
       <td>${clientName(item.client_id)}</td>
       <td>${personName(item.person_id)}</td>
-      <td>${formatMonth(item.period)}</td>
+      <td>${formatDate(item.due_date)}</td>
       <td><strong>${money(item.amount)}</strong></td>
       <td><span class="badge ${statusClass(item.status)}">${item.status}</span></td>
+      <td>${item.document_number || "-"}</td>
     </tr>
-  `).join("") || `<tr><td colspan="5">Nenhum reembolso cadastrado.</td></tr>`;
+  `).join("") || `<tr><td colspan="8">Nenhum reembolso cadastrado.</td></tr>`;
 }
 
 function renderVacations() {
@@ -312,10 +364,24 @@ function renderVacations() {
 }
 
 function renderHomeOffice() {
-  $("#homeOfficeCount").textContent = `${state.homeOffice.length} registros`;
+  const activePeople = state.people.filter((person) => person.status !== "Inativo");
+  const weekdays = ["1", "2", "3", "4", "5"];
+  $("#deskGrid").innerHTML = weekdays.map((day) => {
+    const fixedHome = activePeople.filter((person) => (person.fixed_home_days || []).includes(day)).length;
+    const inOffice = activePeople.length - fixedHome;
+    const freeDesks = 10 - inOffice;
+    return `
+      <article class="desk-card ${freeDesks < 0 ? "warning" : ""}">
+        <strong>${weekdayName(day)}</strong>
+        <div class="desk-count">${Math.max(freeDesks, 0)}</div>
+        <span class="small">${inOffice} presenciais previstos de 10 baias</span>
+      </article>
+    `;
+  }).join("");
+
   $("#homeOfficeList").innerHTML = state.homeOffice.map((item) => `
     <article class="calendar-item">
-      <span class="badge">Home office</span>
+      <span class="badge">${item.action_type || "Home office"}</span>
       <h3>${personName(item.person_id)}</h3>
       <p class="small">${formatDate(item.work_date)} - ${item.client_id ? clientName(item.client_id) : "Sem cliente especifico"}</p>
       ${item.note ? `<p>${item.note}</p>` : ""}
@@ -355,6 +421,7 @@ function renderTeam() {
       <h3>${person.name}</h3>
       <p class="small">${person.role}</p>
       <p>${person.email || "-"}</p>
+      <p class="small">Home office fixo: ${homeDaysText(person.fixed_home_days || [])}</p>
       <span class="badge">${person.status}</span>
     </article>
   `).join("") || `<div class="empty">Nenhum membro cadastrado.</div>`;
@@ -376,9 +443,18 @@ function renderSession() {
   $("#authSubmit").textContent = authMode === "signup" ? "Criar conta" : "Entrar";
 }
 
+function renderActivityTab() {
+  $("[data-activity-tab='tasks']").classList.toggle("active", activeActivityTab === "tasks");
+  $("[data-activity-tab='assignments']").classList.toggle("active", activeActivityTab === "assignments");
+  $("#assignmentTab").classList.toggle("hidden", activeActivityTab !== "assignments");
+  $("#taskColumns").parentElement.classList.toggle("hidden", activeActivityTab !== "tasks");
+  $(".toolbar").classList.toggle("hidden", activeActivityTab !== "tasks");
+}
+
 function renderAll() {
   fillAllSelects();
   renderSession();
+  renderActivityTab();
   renderDashboard();
   renderClients();
   renderTasks();
@@ -388,6 +464,34 @@ function renderAll() {
   renderHomeOffice();
   renderDocuments();
   renderTeam();
+}
+
+function resetClientForm() {
+  const form = $("#clientForm");
+  form.reset();
+  form.elements.id.value = "";
+  $("#clientFormTitle").textContent = "Novo cliente";
+  $("#clientSubmit").textContent = "Cadastrar cliente";
+  $("#cancelClientEdit").classList.add("hidden");
+}
+
+function editClient(id) {
+  const client = state.clients.find((item) => item.id === id);
+  if (!client) return;
+  const form = $("#clientForm");
+  form.elements.id.value = client.id;
+  form.elements.name.value = client.name || "";
+  form.elements.tax_id.value = client.tax_id || "";
+  form.elements.company.value = client.company || "";
+  form.elements.email.value = client.email || "";
+  form.elements.phone.value = client.phone || "";
+  form.elements.owner.value = client.owner || "";
+  form.elements.status.value = client.status || "Ativo";
+  form.elements.notes.value = client.notes || "";
+  $("#clientFormTitle").textContent = "Editar cliente";
+  $("#clientSubmit").textContent = "Salvar alteracoes";
+  $("#cancelClientEdit").classList.remove("hidden");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function handleSubmit(form, work, message) {
@@ -402,12 +506,31 @@ async function handleSubmit(form, work, message) {
 function setupForms() {
   $("#clientForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("clients", data), "Cliente cadastrado.");
+    await handleSubmit(event.currentTarget, (data) => {
+      const payload = {
+        name: data.name,
+        tax_id: data.tax_id,
+        company: data.company,
+        email: data.email,
+        phone: data.phone,
+        owner: data.owner,
+        status: data.status,
+        notes: data.notes
+      };
+      return data.id ? updateRecord("clients", data.id, payload) : insertRecord("clients", payload);
+    }, event.currentTarget.elements.id.value ? "Cliente atualizado." : "Cliente cadastrado.");
+    resetClientForm();
   });
 
   $("#teamForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("people", data), "Membro cadastrado.");
+    await handleSubmit(event.currentTarget, (data, form) => insertRecord("people", {
+      name: data.name,
+      role: data.role,
+      email: data.email,
+      fixed_home_days: selectedValues(form.elements.fixed_home_days),
+      status: data.status
+    }), "Membro cadastrado.");
   });
 
   $("#taskForm").addEventListener("submit", async (event) => {
@@ -440,8 +563,13 @@ function setupForms() {
       client_id: data.client,
       person_id: data.person,
       period: data.period,
+      due_date: data.due_date || null,
+      description: data.description,
+      expense_type: data.expense_type,
       amount: Number(data.amount),
-      status: data.status
+      status: data.status,
+      document_number: data.document_number,
+      notes: data.notes
     }), "Reembolso cadastrado.");
   });
 
@@ -462,6 +590,7 @@ function setupForms() {
       person_id: data.person,
       client_id: data.client || null,
       work_date: data.date,
+      action_type: data.action_type,
       note: data.note
     }), "Home office registrado.");
   });
@@ -523,6 +652,7 @@ async function submitAuth(event) {
         name: $("#signupName").value.trim(),
         role: $("#signupRole").value.trim(),
         email,
+        fixed_home_days: [],
         status: "Ativo"
       };
       localState.people.push(person);
@@ -548,6 +678,7 @@ async function submitAuth(event) {
         name: $("#signupName").value.trim(),
         role: $("#signupRole").value.trim(),
         email,
+        fixed_home_days: [],
         status: "Ativo"
       });
     }
@@ -563,6 +694,32 @@ async function submitAuth(event) {
 }
 
 function setupActions() {
+  $$("[data-activity-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeActivityTab = button.dataset.activityTab;
+      renderActivityTab();
+    });
+  });
+
+  $("#cancelClientEdit").addEventListener("click", resetClientForm);
+
+  $("#clientsTable").addEventListener("click", async (event) => {
+    const editId = event.target.dataset.editClient;
+    const deleteId = event.target.dataset.deleteClient;
+    if (editId) {
+      editClient(editId);
+      return;
+    }
+    if (deleteId) {
+      const confirmed = window.confirm("Excluir este cliente? Atividades e documentos vinculados tambem podem ser afetados.");
+      if (!confirmed) return;
+      await deleteRecord("clients", deleteId);
+      await loadRemoteState();
+      renderAll();
+      toast("Cliente excluido.");
+    }
+  });
+
   $("#loginMode").addEventListener("click", () => {
     authMode = "login";
     renderSession();

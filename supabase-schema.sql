@@ -6,6 +6,7 @@ create table if not exists public.team_members (
   name text not null,
   role text not null,
   email text,
+  fixed_home_days text[] not null default '{}',
   status text not null default 'Ativo',
   created_at timestamptz not null default now()
 );
@@ -13,11 +14,13 @@ create table if not exists public.team_members (
 create table if not exists public.clients (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  tax_id text,
   company text,
   email text,
   phone text,
   owner text,
   status text not null default 'Ativo',
+  notes text,
   created_at timestamptz not null default now()
 );
 
@@ -48,8 +51,13 @@ create table if not exists public.reimbursements (
   client_id uuid references public.clients(id) on delete cascade,
   person_id uuid references public.team_members(id) on delete set null,
   period text not null,
+  due_date date,
+  description text,
+  expense_type text,
   amount numeric(12,2) not null default 0,
   status text not null default 'Pendente',
+  document_number text,
+  notes text,
   created_at timestamptz not null default now()
 );
 
@@ -68,6 +76,7 @@ create table if not exists public.home_office_days (
   person_id uuid references public.team_members(id) on delete cascade,
   client_id uuid references public.clients(id) on delete set null,
   work_date date not null,
+  action_type text not null default 'Home office extra',
   note text,
   created_at timestamptz not null default now()
 );
@@ -89,6 +98,16 @@ alter table public.reimbursements enable row level security;
 alter table public.vacations enable row level security;
 alter table public.home_office_days enable row level security;
 alter table public.documents enable row level security;
+
+alter table public.team_members add column if not exists fixed_home_days text[] not null default '{}';
+alter table public.clients add column if not exists tax_id text;
+alter table public.clients add column if not exists notes text;
+alter table public.reimbursements add column if not exists due_date date;
+alter table public.reimbursements add column if not exists description text;
+alter table public.reimbursements add column if not exists expense_type text;
+alter table public.reimbursements add column if not exists document_number text;
+alter table public.reimbursements add column if not exists notes text;
+alter table public.home_office_days add column if not exists action_type text not null default 'Home office extra';
 
 drop policy if exists team_members_authenticated_access on public.team_members;
 drop policy if exists clients_authenticated_access on public.clients;
