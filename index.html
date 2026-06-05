@@ -365,13 +365,17 @@
             </section>
             <form class="panel form-panel modal-card hidden" id="teamForm">
               <button class="modal-close" data-close-modal type="button">X</button>
-              <h2>Novo membro</h2>
+              <h2 id="teamFormTitle">Novo membro</h2>
+              <input type="hidden" name="id" />
               <label>Nome<input required name="name" /></label>
               <label>Funcao<input required name="role" /></label>
               <label>E-mail<input type="email" name="email" /></label>
               <label>Dias fixos de home office<select multiple name="fixed_home_days" id="teamHomeDaysSelect"><option value="1">Segunda</option><option value="2">Terca</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option></select></label>
               <label>Status<select name="status"><option>Ativo</option><option>Ausente</option><option>Inativo</option></select></label>
-              <button class="primary" type="submit">Cadastrar membro</button>
+              <div class="form-actions">
+                <button class="secondary hidden" id="cancelTeamEdit" type="button">Cancelar</button>
+                <button class="primary" id="teamSubmit" type="submit">Cadastrar membro</button>
+              </div>
             </form>
           </div>
         </section>

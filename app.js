@@ -581,6 +581,10 @@ function renderTeam() {
       <p>${person.email || "-"}</p>
       <p class="small">Home office fixo: ${homeDaysText(person.fixed_home_days || [])}</p>
       <span class="badge">${person.status}</span>
+      <div class="row-actions">
+        <button type="button" data-edit-team="${person.id}">Editar</button>
+        <button class="danger" type="button" data-delete-team="${person.id}">Excluir</button>
+      </div>
     </article>
   `).join("") || `<div class="empty">Nenhum membro cadastrado.</div>`;
 }
@@ -632,6 +636,7 @@ function openModal(id, options = {}) {
   if (reset) {
     modal.reset();
     if (id === "clientForm") resetClientForm(false);
+    if (id === "teamForm") resetTeamForm(false);
   }
   $("#modalBackdrop").classList.remove("hidden");
   modal.classList.remove("hidden");
@@ -658,6 +663,16 @@ function resetClientForm(close = false) {
   if (close) closeModals(false);
 }
 
+function resetTeamForm(close = false) {
+  const form = $("#teamForm");
+  form.reset();
+  form.elements.id.value = "";
+  $("#teamFormTitle").textContent = "Novo membro";
+  $("#teamSubmit").textContent = "Cadastrar membro";
+  $("#cancelTeamEdit").classList.add("hidden");
+  if (close) closeModals(false);
+}
+
 function editClient(id) {
   const client = state.clients.find((item) => item.id === id);
   if (!client) return;
@@ -675,6 +690,24 @@ function editClient(id) {
   $("#clientSubmit").textContent = "Salvar alteracoes";
   $("#cancelClientEdit").classList.remove("hidden");
   openModal("clientForm", { reset: false });
+}
+
+function editTeamMember(id) {
+  const person = state.people.find((item) => item.id === id);
+  if (!person) return;
+  const form = $("#teamForm");
+  form.elements.id.value = person.id;
+  form.elements.name.value = person.name || "";
+  form.elements.role.value = person.role || "";
+  form.elements.email.value = person.email || "";
+  form.elements.status.value = person.status || "Ativo";
+  Array.from(form.elements.fixed_home_days.options).forEach((option) => {
+    option.selected = (person.fixed_home_days || []).includes(option.value);
+  });
+  $("#teamFormTitle").textContent = "Editar membro";
+  $("#teamSubmit").textContent = "Salvar alteracoes";
+  $("#cancelTeamEdit").classList.remove("hidden");
+  openModal("teamForm", { reset: false });
 }
 
 async function handleSubmit(form, work, message) {
@@ -708,13 +741,17 @@ function setupForms() {
 
   $("#teamForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data, form) => insertRecord("people", {
-      name: data.name,
-      role: data.role,
-      email: data.email,
-      fixed_home_days: selectedValues(form.elements.fixed_home_days),
-      status: data.status
-    }), "Membro cadastrado.");
+    await handleSubmit(event.currentTarget, (data, form) => {
+      const payload = {
+        name: data.name,
+        role: data.role,
+        email: data.email,
+        fixed_home_days: selectedValues(form.elements.fixed_home_days),
+        status: data.status
+      };
+      return data.id ? updateRecord("people", data.id, payload) : insertRecord("people", payload);
+    }, event.currentTarget.elements.id.value ? "Membro atualizado." : "Membro cadastrado.");
+    resetTeamForm();
   });
 
   $("#taskForm").addEventListener("submit", async (event) => {
@@ -961,6 +998,7 @@ function setupActions() {
   });
 
   $("#cancelClientEdit").addEventListener("click", () => resetClientForm(true));
+  $("#cancelTeamEdit").addEventListener("click", () => resetTeamForm(true));
 
   $("#clientsTable").addEventListener("click", async (event) => {
     const editId = event.target.dataset.editClient;
@@ -976,6 +1014,33 @@ function setupActions() {
       await loadRemoteState();
       renderAll();
       toast("Cliente excluido.");
+    }
+  });
+
+  $("#teamGrid").addEventListener("click", async (event) => {
+    const editId = event.target.dataset.editTeam;
+    const deleteId = event.target.dataset.deleteTeam;
+    if (editId) {
+      editTeamMember(editId);
+      return;
+    }
+    if (deleteId) {
+      const linkedRecords = [
+        ...state.tasks.filter((item) => (item.people_ids || []).includes(deleteId)),
+        ...state.assignments.filter((item) => (item.people_ids || []).includes(deleteId)),
+        ...state.reimbursements.filter((item) => item.person_id === deleteId),
+        ...state.vacations.filter((item) => item.person_id === deleteId),
+        ...state.homeOffice.filter((item) => item.person_id === deleteId)
+      ];
+      const message = linkedRecords.length
+        ? "Este membro possui registros vinculados. Excluir pode afetar atividades, reembolsos, ferias ou home office. Deseja continuar?"
+        : "Excluir este membro da equipe?";
+      const confirmed = window.confirm(message);
+      if (!confirmed) return;
+      await deleteRecord("people", deleteId);
+      await loadRemoteState();
+      renderAll();
+      toast("Membro excluido.");
     }
   });
 
