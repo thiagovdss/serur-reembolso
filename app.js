@@ -221,7 +221,6 @@ function fillAllSelects() {
     ["#assignmentClientSelect", null],
     ["#reimbursementClientSelect", null],
     ["#reimbursementClientFilter", "Todos os clientes"],
-    ["#homeOfficeClientSelect", "Sem cliente especifico"],
     ["#documentClientSelect", null]
   ].forEach(([selector, placeholder]) => fillSelect($(selector), state.clients, placeholder));
 
@@ -259,7 +258,7 @@ function renderDashboard() {
 
   const agenda = [
     ...state.vacations.map((item) => ({ type: "Ferias", date: item.start_date, title: personName(item.person_id), text: `${formatDate(item.start_date)} a ${formatDate(item.end_date)}` })),
-    ...state.homeOffice.map((item) => ({ type: "Home office", date: item.work_date, title: personName(item.person_id), text: `${formatDate(item.work_date)} - ${item.client_id ? clientName(item.client_id) : "Sem cliente especifico"}` }))
+    ...state.homeOffice.map((item) => ({ type: "Home office", date: item.work_date, title: personName(item.person_id), text: `${formatDate(item.work_date)} - ${item.action_type || "Ajuste"}` }))
   ].sort((a, b) => a.date.localeCompare(b.date));
 
   $("#teamAgenda").innerHTML = agenda.map((item) => `
@@ -420,7 +419,7 @@ function renderHomeOffice() {
     <article class="calendar-item">
       <span class="badge">${item.action_type || "Home office"}</span>
       <h3>${personName(item.person_id)}</h3>
-      <p class="small">${formatDate(item.work_date)} - ${item.client_id ? clientName(item.client_id) : "Sem cliente especifico"}</p>
+      <p class="small">${formatDate(item.work_date)}</p>
       ${item.note ? `<p>${item.note}</p>` : ""}
     </article>
   `).join("") || `<div class="empty">Nenhum home office cadastrado.</div>`;
@@ -773,7 +772,7 @@ function setupForms() {
     event.preventDefault();
     await handleSubmit(event.currentTarget, (data) => insertRecord("homeOffice", {
       person_id: data.person,
-      client_id: data.client || null,
+      client_id: null,
       work_date: data.date,
       action_type: data.action_type,
       note: data.note
