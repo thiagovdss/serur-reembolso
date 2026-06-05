@@ -84,6 +84,10 @@ function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function clientName(id) {
   return state.clients.find((client) => client.id === id)?.name || "Cliente nao encontrado";
 }
@@ -238,16 +242,25 @@ function fillAllSelects() {
 
 function renderDashboard() {
   const pendingTasks = state.tasks.filter((task) => task.status !== "Concluida");
+  const inProgressTasks = state.tasks.filter((task) => task.status === "Em andamento");
+  const completedTasks = state.tasks.filter((task) => task.status === "Concluida");
   const overdueTasks = state.tasks.filter((task) => task.status === "Atrasada");
-  const pendingReimbursements = state.reimbursements.filter((item) => item.status !== "Pago");
-  const reimbursementTotal = pendingReimbursements.reduce((sum, item) => sum + Number(item.amount), 0);
+  const firstName = (currentMember?.name || currentUser?.email || "Equipe").split(" ")[0];
+  $("#dashboardGreeting").textContent = `Ola, ${firstName}`;
+  $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   $("#metricsGrid").innerHTML = [
-    ["Clientes ativos", state.clients.filter((client) => client.status === "Ativo").length],
-    ["Atividades abertas", pendingTasks.length],
-    ["Reembolsos pendentes", money(reimbursementTotal)],
-    ["Demandas atrasadas", overdueTasks.length]
-  ].map(([label, value]) => `<article class="metric"><span>${label}</span><strong>${value}</strong></article>`).join("");
+    ["Total de Atividades", state.tasks.length, "square-check-big", ""],
+    ["Em Andamento", inProgressTasks.length, "clock", "icon-blue"],
+    ["Concluidas", completedTasks.length, "trending-up", "icon-green"],
+    ["Atrasadas", overdueTasks.length, "circle-alert", "icon-red"]
+  ].map(([label, value, icon, theme]) => `
+    <article class="metric ${theme}">
+      <div class="metric-icon"><i data-lucide="${icon}"></i></div>
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </article>
+  `).join("");
 
   $("#todayLabel").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   $("#dashboardTasks").innerHTML = state.tasks
@@ -594,6 +607,8 @@ function renderSession() {
   $("#loginScreen").classList.toggle("hidden", signedIn);
   $("#appShell").classList.toggle("hidden", !signedIn);
   $("#currentUserName").textContent = currentMember?.name || currentUser?.email || "";
+  $("#sidebarUserName").textContent = currentMember?.name || currentUser?.email || "Serur";
+  $("#sidebarUserInitial").textContent = (currentMember?.name || currentUser?.email || "S").slice(0, 1).toUpperCase();
   $("#authHint").textContent = hasSupabaseConfig
     ? "Use seu e-mail e senha. Se ainda nao tiver acesso, crie a primeira conta ou solicite cadastro."
     : "Modo local de teste. Configure o Supabase para publicar com banco de dados compartilhado.";
@@ -626,6 +641,7 @@ function renderAll() {
   renderHomeOffice();
   renderDocuments();
   renderTeam();
+  refreshIcons();
 }
 
 function openModal(id, options = {}) {

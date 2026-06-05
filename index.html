@@ -45,15 +45,22 @@
           </div>
         </div>
         <nav class="nav" aria-label="Navegacao principal">
-          <button class="nav-item active" data-view="dashboard">Dashboard</button>
-          <button class="nav-item" data-view="clientes">Clientes</button>
-          <button class="nav-item" data-view="atividades">Atividades</button>
-          <button class="nav-item" data-view="reembolsos">Reembolsos</button>
-          <button class="nav-item" data-view="ferias">Ferias</button>
-          <button class="nav-item" data-view="homeoffice">Home office</button>
-          <button class="nav-item" data-view="documentos">Documentos</button>
-          <button class="nav-item" data-view="equipe">Equipe</button>
+          <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+          <button class="nav-item" data-view="clientes"><i data-lucide="briefcase-business"></i><span>Clientes</span></button>
+          <button class="nav-item" data-view="atividades"><i data-lucide="square-check-big"></i><span>Atividades</span></button>
+          <button class="nav-item" data-view="reembolsos"><i data-lucide="receipt-text"></i><span>Reembolsos</span></button>
+          <button class="nav-item" data-view="ferias"><i data-lucide="calendar-days"></i><span>Ferias</span></button>
+          <button class="nav-item" data-view="homeoffice"><i data-lucide="home"></i><span>Home office</span></button>
+          <button class="nav-item" data-view="documentos"><i data-lucide="folder-open"></i><span>Documentos</span></button>
+          <button class="nav-item" data-view="equipe"><i data-lucide="users"></i><span>Equipe</span></button>
         </nav>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sidebarUserInitial">S</div>
+          <div>
+            <strong id="sidebarUserName">Serur</strong>
+            <span>Gestao interna</span>
+          </div>
+        </div>
       </aside>
 
       <main class="main">
@@ -74,6 +81,10 @@
         </header>
 
         <section class="view active" id="dashboard">
+          <div class="dashboard-intro">
+            <h2 id="dashboardGreeting">Ola</h2>
+            <p id="dashboardDate"></p>
+          </div>
           <div class="metrics-grid" id="metricsGrid"></div>
           <div class="content-grid two">
             <section class="panel">
@@ -384,6 +395,7 @@
     <div class="modal-backdrop hidden" id="modalBackdrop"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="supabase-config.js"></script>
     <script src="app.js"></script>
   </body>
