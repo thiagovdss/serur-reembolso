@@ -466,13 +466,38 @@ function renderAll() {
   renderTeam();
 }
 
-function resetClientForm() {
+function openModal(id, options = {}) {
+  const { reset = true } = options;
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  $$(".modal-card").forEach((item) => item.classList.add("hidden"));
+  if (reset) {
+    modal.reset();
+    if (id === "clientForm") resetClientForm(false);
+  }
+  $("#modalBackdrop").classList.remove("hidden");
+  modal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+}
+
+function closeModals(reset = true) {
+  $$(".modal-card").forEach((modal) => {
+    modal.classList.add("hidden");
+    if (reset) modal.reset();
+  });
+  $("#modalBackdrop").classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  if (reset) resetClientForm(false);
+}
+
+function resetClientForm(close = false) {
   const form = $("#clientForm");
   form.reset();
   form.elements.id.value = "";
   $("#clientFormTitle").textContent = "Novo cliente";
   $("#clientSubmit").textContent = "Cadastrar cliente";
   $("#cancelClientEdit").classList.add("hidden");
+  if (close) closeModals(false);
 }
 
 function editClient(id) {
@@ -491,7 +516,7 @@ function editClient(id) {
   $("#clientFormTitle").textContent = "Editar cliente";
   $("#clientSubmit").textContent = "Salvar alteracoes";
   $("#cancelClientEdit").classList.remove("hidden");
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  openModal("clientForm", { reset: false });
 }
 
 async function handleSubmit(form, work, message) {
@@ -500,6 +525,7 @@ async function handleSubmit(form, work, message) {
   if (isSignedIn()) await loadRemoteState();
   form.reset();
   renderAll();
+  closeModals(false);
   toast(message);
 }
 
@@ -694,6 +720,20 @@ async function submitAuth(event) {
 }
 
 function setupActions() {
+  $$("[data-open-modal]").forEach((button) => {
+    button.addEventListener("click", () => openModal(button.dataset.openModal));
+  });
+
+  $$("[data-close-modal]").forEach((button) => {
+    button.addEventListener("click", () => closeModals());
+  });
+
+  $("#modalBackdrop").addEventListener("click", () => closeModals());
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeModals();
+  });
+
   $$("[data-activity-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       activeActivityTab = button.dataset.activityTab;
@@ -701,7 +741,7 @@ function setupActions() {
     });
   });
 
-  $("#cancelClientEdit").addEventListener("click", resetClientForm);
+  $("#cancelClientEdit").addEventListener("click", () => resetClientForm(true));
 
   $("#clientsTable").addEventListener("click", async (event) => {
     const editId = event.target.dataset.editClient;

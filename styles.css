@@ -291,6 +291,12 @@ h3 {
   background: var(--serur-orange);
 }
 
+.primary.compact {
+  width: auto;
+  padding: 9px 13px;
+  white-space: nowrap;
+}
+
 .primary:hover {
   background: var(--serur-orange-dark);
 }
@@ -375,6 +381,14 @@ h3 {
   margin-bottom: 16px;
 }
 
+.panel-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .panel-heading span {
   color: var(--muted);
   font-size: 13px;
@@ -408,6 +422,49 @@ th {
 .form-panel {
   display: grid;
   gap: 13px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 12, 10, 0.58);
+  backdrop-filter: blur(1px);
+}
+
+.modal-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 90;
+  transform: translate(-50%, -50%);
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 28px;
+  border-color: #e1d4c1;
+}
+
+.modal-card h2 {
+  padding-right: 44px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  min-height: 36px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.modal-close:hover {
+  color: var(--ink);
+  background: #f4ead9;
 }
 
 .form-actions {

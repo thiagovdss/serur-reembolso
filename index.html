@@ -98,7 +98,10 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Clientes</h2>
-                <span id="clientCount"></span>
+                <div class="panel-actions">
+                  <span id="clientCount"></span>
+                  <button class="primary compact" data-open-modal="clientForm" type="button">Novo cliente</button>
+                </div>
               </div>
               <div class="table-wrap">
                 <table>
@@ -116,7 +119,8 @@
                 </table>
               </div>
             </section>
-            <form class="panel form-panel" id="clientForm">
+            <form class="panel form-panel modal-card hidden" id="clientForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2 id="clientFormTitle">Novo cliente</h2>
               <input type="hidden" name="id" />
               <label>Nome<input required name="name" /></label>
@@ -139,6 +143,7 @@
           <div class="segment-tabs">
             <button class="secondary active" data-activity-tab="tasks" type="button">Atividades</button>
             <button class="secondary" data-activity-tab="assignments" type="button">Distribuicao mensal</button>
+            <button class="primary compact" data-open-modal="taskForm" type="button">Nova atividade</button>
           </div>
           <div class="toolbar">
             <select id="taskStatusFilter">
@@ -153,7 +158,8 @@
           </div>
           <div class="content-grid side-form">
             <section class="activity-layout" id="taskColumns"></section>
-            <form class="panel form-panel" id="taskForm">
+            <form class="panel form-panel modal-card hidden" id="taskForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Nova atividade</h2>
               <label>Titulo<input required name="title" /></label>
               <label>Cliente<select required name="client" id="taskClientSelect"></select></label>
@@ -170,11 +176,15 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Distribuicao mensal por cliente</h2>
-                <span id="assignmentCount"></span>
+                <div class="panel-actions">
+                  <span id="assignmentCount"></span>
+                  <button class="primary compact" data-open-modal="assignmentForm" type="button">Nova distribuicao</button>
+                </div>
               </div>
               <div class="assignment-grid" id="assignmentGrid"></div>
             </section>
-            <form class="panel form-panel" id="assignmentForm">
+            <form class="panel form-panel modal-card hidden" id="assignmentForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Nova distribuicao</h2>
               <label>Mes<input required type="month" name="month" /></label>
               <label>Cliente<select required name="client" id="assignmentClientSelect"></select></label>
@@ -191,7 +201,10 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Controle de reembolsos</h2>
-                <button class="secondary" id="exportCsv" type="button">Exportar CSV</button>
+                <div class="panel-actions">
+                  <button class="secondary" id="exportCsv" type="button">Exportar CSV</button>
+                  <button class="primary compact" data-open-modal="reimbursementForm" type="button">Novo reembolso</button>
+                </div>
               </div>
               <div class="table-wrap">
                 <table>
@@ -211,7 +224,8 @@
                 </table>
               </div>
             </section>
-            <form class="panel form-panel" id="reimbursementForm">
+            <form class="panel form-panel modal-card hidden" id="reimbursementForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Novo reembolso</h2>
               <label>Competencia<input required type="month" name="period" /></label>
               <label>Vencimento<input type="date" name="due_date" /></label>
@@ -233,11 +247,15 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Ferias</h2>
-                <span id="vacationCount"></span>
+                <div class="panel-actions">
+                  <span id="vacationCount"></span>
+                  <button class="primary compact" data-open-modal="vacationForm" type="button">Novo periodo</button>
+                </div>
               </div>
               <div class="calendar-list" id="vacationList"></div>
             </section>
-            <form class="panel form-panel" id="vacationForm">
+            <form class="panel form-panel modal-card hidden" id="vacationForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Novo periodo</h2>
               <label>Colaborador<select required name="person" id="vacationPersonSelect"></select></label>
               <label>Inicio<input required type="date" name="start" /></label>
@@ -254,13 +272,17 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Home office</h2>
-                <span>10 baias disponiveis na sala</span>
+                <div class="panel-actions">
+                  <span>10 baias disponiveis na sala</span>
+                  <button class="primary compact" data-open-modal="homeOfficeForm" type="button">Novo ajuste</button>
+                </div>
               </div>
               <div class="desk-grid" id="deskGrid"></div>
               <h2 class="section-subtitle">Registros e trocas</h2>
               <div class="calendar-list" id="homeOfficeList"></div>
             </section>
-            <form class="panel form-panel" id="homeOfficeForm">
+            <form class="panel form-panel modal-card hidden" id="homeOfficeForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Novo ajuste</h2>
               <label>Colaborador<select required name="person" id="homeOfficePersonSelect"></select></label>
               <label>Data<input required type="date" name="date" /></label>
@@ -277,11 +299,15 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Documentos por cliente</h2>
-                <span id="documentCount"></span>
+                <div class="panel-actions">
+                  <span id="documentCount"></span>
+                  <button class="primary compact" data-open-modal="documentForm" type="button">Novo documento</button>
+                </div>
               </div>
               <div class="drive-grid" id="documentsGrid"></div>
             </section>
-            <form class="panel form-panel" id="documentForm">
+            <form class="panel form-panel modal-card hidden" id="documentForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Novo documento</h2>
               <label>Cliente<select required name="client" id="documentClientSelect"></select></label>
               <label>Nome do documento<input required name="name" /></label>
@@ -297,11 +323,15 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Equipe</h2>
-                <span id="teamCount"></span>
+                <div class="panel-actions">
+                  <span id="teamCount"></span>
+                  <button class="primary compact" data-open-modal="teamForm" type="button">Novo membro</button>
+                </div>
               </div>
               <div class="team-grid" id="teamGrid"></div>
             </section>
-            <form class="panel form-panel" id="teamForm">
+            <form class="panel form-panel modal-card hidden" id="teamForm">
+              <button class="modal-close" data-close-modal type="button">X</button>
               <h2>Novo membro</h2>
               <label>Nome<input required name="name" /></label>
               <label>Funcao<input required name="role" /></label>
@@ -314,6 +344,7 @@
         </section>
       </main>
     </div>
+    <div class="modal-backdrop hidden" id="modalBackdrop"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
