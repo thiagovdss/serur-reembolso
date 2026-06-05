@@ -206,6 +206,18 @@
                   <button class="primary compact" data-open-modal="reimbursementForm" type="button">Novo reembolso</button>
                 </div>
               </div>
+              <details class="filter-panel" open>
+                <summary>Filtros</summary>
+                <div class="filter-grid">
+                  <label>Competencia<input id="reimbursementPeriodFilter" type="month" /></label>
+                  <label>Status<select id="reimbursementStatusFilter"><option value="">Todos</option><option>Pendente</option><option>Em analise</option><option>Pago</option><option>Vencido</option></select></label>
+                  <label>Cliente<select id="reimbursementClientFilter"></select></label>
+                  <label>Responsavel<select id="reimbursementPersonFilter"></select></label>
+                  <label>Tipo<select id="reimbursementTypeFilter"><option value="">Todos</option><option>Custas</option><option>Diligencia</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
+                  <label>Buscar<input id="reimbursementTextFilter" type="search" placeholder="Descricao ou no documento" /></label>
+                </div>
+                <button class="secondary" id="clearReimbursementFilters" type="button">Limpar filtros</button>
+              </details>
               <div class="table-wrap">
                 <table>
                   <thead>

@@ -220,6 +220,7 @@ function fillAllSelects() {
     ["#taskClientSelect", null],
     ["#assignmentClientSelect", null],
     ["#reimbursementClientSelect", null],
+    ["#reimbursementClientFilter", "Todos os clientes"],
     ["#homeOfficeClientSelect", "Sem cliente especifico"],
     ["#documentClientSelect", null]
   ].forEach(([selector, placeholder]) => fillSelect($(selector), state.clients, placeholder));
@@ -232,6 +233,7 @@ function fillAllSelects() {
     "#homeOfficePersonSelect"
   ].forEach((selector) => fillSelect($(selector), state.people));
 
+  fillSelect($("#reimbursementPersonFilter"), state.people, "Todos os responsaveis");
   fillSelect($("#taskClientFilter"), state.clients, "Todos os clientes");
 }
 
@@ -339,18 +341,40 @@ function renderAssignments() {
   `).join("") || `<div class="empty">Nenhuma distribuicao cadastrada.</div>`;
 }
 
+function filteredReimbursements() {
+  const period = $("#reimbursementPeriodFilter").value;
+  const status = $("#reimbursementStatusFilter").value;
+  const client = $("#reimbursementClientFilter").value;
+  const person = $("#reimbursementPersonFilter").value;
+  const type = $("#reimbursementTypeFilter").value;
+  const text = $("#reimbursementTextFilter").value.trim().toLowerCase();
+
+  return state.reimbursements.filter((item) => {
+    const haystack = `${item.description || ""} ${item.document_number || ""} ${clientName(item.client_id)} ${personName(item.person_id)}`.toLowerCase();
+    return (!period || item.period === period)
+      && (!status || item.status === status)
+      && (!client || item.client_id === client)
+      && (!person || item.person_id === person)
+      && (!type || item.expense_type === type)
+      && (!text || haystack.includes(text));
+  });
+}
+
 function renderReimbursements() {
-  const total = state.reimbursements.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const pending = state.reimbursements.filter((item) => item.status !== "Pago").reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const overdue = state.reimbursements.filter((item) => item.status === "Vencido").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const items = filteredReimbursements();
+  const total = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pending = items.filter((item) => item.status === "Pendente" || item.status === "Em analise").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const paid = items.filter((item) => item.status === "Pago").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const overdue = items.filter((item) => item.status === "Vencido").reduce((sum, item) => sum + Number(item.amount || 0), 0);
   $("#reimbursementMetrics").innerHTML = [
     ["Total", money(total)],
     ["Pendente", money(pending)],
+    ["Pago", money(paid)],
     ["Vencido", money(overdue)],
-    ["Registros", state.reimbursements.length]
+    ["Registros", items.length]
   ].map(([label, value]) => `<article class="metric"><span>${label}</span><strong>${value}</strong></article>`).join("");
 
-  $("#reimbursementsTable").innerHTML = state.reimbursements.map((item) => `
+  $("#reimbursementsTable").innerHTML = items.map((item) => `
     <tr>
       <td><span class="badge">${formatMonth(item.period)}</span></td>
       <td><strong>${item.description || "-"}</strong><br><span class="small">${item.expense_type || "Sem tipo"}</span></td>
@@ -782,12 +806,30 @@ function setupFilters() {
   $("#globalSearch").addEventListener("input", renderAll);
   $("#taskStatusFilter").addEventListener("change", renderTasks);
   $("#taskClientFilter").addEventListener("change", renderTasks);
+  [
+    "#reimbursementPeriodFilter",
+    "#reimbursementStatusFilter",
+    "#reimbursementClientFilter",
+    "#reimbursementPersonFilter",
+    "#reimbursementTypeFilter"
+  ].forEach((selector) => $(selector).addEventListener("change", renderReimbursements));
+  $("#reimbursementTextFilter").addEventListener("input", renderReimbursements);
+
+  $("#clearReimbursementFilters").addEventListener("click", () => {
+    $("#reimbursementPeriodFilter").value = "";
+    $("#reimbursementStatusFilter").value = "";
+    $("#reimbursementClientFilter").value = "";
+    $("#reimbursementPersonFilter").value = "";
+    $("#reimbursementTypeFilter").value = "";
+    $("#reimbursementTextFilter").value = "";
+    renderReimbursements();
+  });
 }
 
 function exportCsv() {
-  const rows = [["Cliente", "Responsavel", "Competencia", "Valor", "Status"]];
-  state.reimbursements.forEach((item) => {
-    rows.push([clientName(item.client_id), personName(item.person_id), formatMonth(item.period), item.amount, item.status]);
+  const rows = [["Competencia", "Descricao", "Cliente", "Responsavel", "Vencimento", "Tipo", "Valor", "Status", "No Doc."]];
+  filteredReimbursements().forEach((item) => {
+    rows.push([formatMonth(item.period), item.description || "", clientName(item.client_id), personName(item.person_id), formatDate(item.due_date), item.expense_type || "", item.amount, item.status, item.document_number || ""]);
   });
   const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(";")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });

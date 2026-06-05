@@ -389,6 +389,27 @@ h3 {
   gap: 10px;
 }
 
+.filter-panel {
+  padding: 14px;
+  margin-bottom: 16px;
+  background: #fff8eb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.filter-panel summary {
+  cursor: pointer;
+  color: var(--serur-orange-dark);
+  font-weight: 800;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
 .panel-heading span {
   color: var(--muted);
   font-size: 13px;
