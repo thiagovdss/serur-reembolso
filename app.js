@@ -29,6 +29,8 @@ let activeActivityTab = "tasks";
 let authMode = "login";
 let currentUser = null;
 let currentMember = null;
+let calendarCursor = new Date();
+let selectedCalendarDate = new Date().toISOString().slice(0, 10);
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -65,6 +67,17 @@ function formatMonth(value) {
   if (!value) return "-";
   const [year, month] = value.split("-");
   return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+
+function isoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateFromIso(value) {
+  return new Date(`${value}T12:00:00`);
 }
 
 function money(value) {
@@ -387,6 +400,128 @@ function renderHomeOffice() {
       ${item.note ? `<p>${item.note}</p>` : ""}
     </article>
   `).join("") || `<div class="empty">Nenhum home office cadastrado.</div>`;
+
+  renderTeamCalendar();
+}
+
+function peopleOnFixedHomeDate(dateValue) {
+  const day = String(dateFromIso(dateValue).getDay());
+  if (day === "0" || day === "6") return [];
+  return state.people.filter((person) => person.status !== "Inativo" && (person.fixed_home_days || []).includes(day));
+}
+
+function vacationsOnDate(dateValue) {
+  return state.vacations.filter((item) => item.start_date <= dateValue && item.end_date >= dateValue);
+}
+
+function adjustmentsOnDate(dateValue) {
+  return state.homeOffice.filter((item) => item.work_date === dateValue);
+}
+
+function countOfficeDesks(dateValue) {
+  const activePeople = state.people.filter((person) => person.status !== "Inativo");
+  const fixedHomeIds = new Set(peopleOnFixedHomeDate(dateValue).map((person) => person.id));
+  const vacationIds = new Set(vacationsOnDate(dateValue).map((item) => item.person_id));
+  const adjustments = adjustmentsOnDate(dateValue);
+  adjustments.forEach((item) => {
+    if (item.action_type === "Home office extra" || item.action_type === "Troca de dia") fixedHomeIds.add(item.person_id);
+    if (item.action_type === "Presencial extra") fixedHomeIds.delete(item.person_id);
+  });
+  const inOffice = activePeople.filter((person) => !fixedHomeIds.has(person.id) && !vacationIds.has(person.id)).length;
+  return { inOffice, freeDesks: 10 - inOffice };
+}
+
+function renderTeamCalendar() {
+  const monthSelect = $("#calendarMonth");
+  const yearSelect = $("#calendarYear");
+  if (!monthSelect.options.length) {
+    const monthLabels = Array.from({ length: 12 }, (_, index) => new Date(2026, index, 1).toLocaleDateString("pt-BR", { month: "short" }));
+    monthSelect.innerHTML = monthLabels.map((label, index) => `<option value="${index}">${label}</option>`).join("");
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = Array.from({ length: 7 }, (_, index) => currentYear - 2 + index)
+      .map((year) => `<option value="${year}">${year}</option>`)
+      .join("");
+  }
+
+  monthSelect.value = String(calendarCursor.getMonth());
+  yearSelect.value = String(calendarCursor.getFullYear());
+
+  const year = calendarCursor.getFullYear();
+  const month = calendarCursor.getMonth();
+  const first = new Date(year, month, 1);
+  const start = new Date(year, month, 1 - first.getDay());
+  const today = isoDate(new Date());
+  const cells = [];
+
+  for (let index = 0; index < 42; index += 1) {
+    const cellDate = new Date(start);
+    cellDate.setDate(start.getDate() + index);
+    const value = isoDate(cellDate);
+    const fixedHome = peopleOnFixedHomeDate(value);
+    const vacations = vacationsOnDate(value);
+    const adjustments = adjustmentsOnDate(value);
+    cells.push(`
+      <button class="calendar-day ${cellDate.getMonth() !== month ? "other-month" : ""} ${value === selectedCalendarDate ? "selected" : ""} ${value === today ? "today" : ""}" data-calendar-date="${value}" type="button">
+        <span class="day-number">${cellDate.getDate()}</span>
+        <span class="day-markers">
+          ${fixedHome.length ? `<span class="day-marker home">H ${fixedHome.length}</span>` : ""}
+          ${vacations.length ? `<span class="day-marker vacation">F ${vacations.length}</span>` : ""}
+          ${adjustments.length ? `<span class="day-marker adjust">A ${adjustments.length}</span>` : ""}
+        </span>
+      </button>
+    `);
+  }
+
+  $("#teamCalendar").innerHTML = cells.join("");
+  renderCalendarDetail();
+}
+
+function renderCalendarDetail() {
+  const fixedHome = peopleOnFixedHomeDate(selectedCalendarDate);
+  const vacations = vacationsOnDate(selectedCalendarDate);
+  const adjustments = adjustmentsOnDate(selectedCalendarDate);
+  const desks = countOfficeDesks(selectedCalendarDate);
+  const periodStart = $("#periodStart").value;
+  const periodEnd = $("#periodEnd").value;
+  const periodItems = periodStart && periodEnd
+    ? [
+        ...state.vacations
+          .filter((item) => item.start_date <= periodEnd && item.end_date >= periodStart)
+          .map((item) => `Ferias: ${personName(item.person_id)} (${formatDate(item.start_date)} a ${formatDate(item.end_date)})`),
+        ...state.homeOffice
+          .filter((item) => item.work_date >= periodStart && item.work_date <= periodEnd)
+          .map((item) => `${item.action_type || "Ajuste"}: ${personName(item.person_id)} (${formatDate(item.work_date)})`)
+      ]
+    : [];
+
+  $("#calendarDetail").innerHTML = `
+    <h3>${formatDate(selectedCalendarDate)}</h3>
+    <div class="calendar-detail-block">
+      <strong>Baias</strong>
+      <p class="small">${Math.max(desks.freeDesks, 0)} livres de 10. ${desks.inOffice} pessoas presenciais previstas.</p>
+    </div>
+    <div class="calendar-detail-block">
+      <strong>Home office fixo</strong>
+      <p class="small">${fixedHome.length ? fixedHome.map((person) => person.name).join(", ") : "Ninguem em home fixo."}</p>
+    </div>
+    <div class="calendar-detail-block">
+      <strong>Ferias</strong>
+      <p class="small">${vacations.length ? vacations.map((item) => personName(item.person_id)).join(", ") : "Nenhuma ferias marcada."}</p>
+    </div>
+    <div class="calendar-detail-block">
+      <strong>Ajustes e trocas</strong>
+      <p class="small">${adjustments.length ? adjustments.map((item) => `${personName(item.person_id)} - ${item.action_type || "Ajuste"}`).join("<br>") : "Nenhum ajuste registrado."}</p>
+    </div>
+    <div class="calendar-detail-block">
+      <button class="primary compact" id="newAdjustmentFromCalendar" type="button">Registrar ajuste nesta data</button>
+    </div>
+    ${periodItems.length ? `
+      <div class="calendar-detail-block">
+        <strong>Periodo selecionado</strong>
+        <p class="small">${periodItems.join("<br>")}</p>
+      </div>
+    ` : ""}
+  `;
 }
 
 function renderDocuments() {
@@ -732,6 +867,49 @@ function setupActions() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeModals();
+  });
+
+  $("#prevCalendarMonth").addEventListener("click", () => {
+    calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+    renderTeamCalendar();
+  });
+
+  $("#nextCalendarMonth").addEventListener("click", () => {
+    calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+    renderTeamCalendar();
+  });
+
+  $("#todayCalendar").addEventListener("click", () => {
+    calendarCursor = new Date();
+    selectedCalendarDate = isoDate(new Date());
+    renderTeamCalendar();
+  });
+
+  $("#calendarMonth").addEventListener("change", (event) => {
+    calendarCursor = new Date(calendarCursor.getFullYear(), Number(event.target.value), 1);
+    renderTeamCalendar();
+  });
+
+  $("#calendarYear").addEventListener("change", (event) => {
+    calendarCursor = new Date(Number(event.target.value), calendarCursor.getMonth(), 1);
+    renderTeamCalendar();
+  });
+
+  $("#periodStart").addEventListener("change", renderCalendarDetail);
+  $("#periodEnd").addEventListener("change", renderCalendarDetail);
+
+  $("#teamCalendar").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-calendar-date]");
+    if (!button) return;
+    selectedCalendarDate = button.dataset.calendarDate;
+    calendarCursor = dateFromIso(selectedCalendarDate);
+    renderTeamCalendar();
+  });
+
+  $("#calendarDetail").addEventListener("click", (event) => {
+    if (event.target.id !== "newAdjustmentFromCalendar") return;
+    openModal("homeOfficeForm");
+    $("#homeOfficeForm").elements.date.value = selectedCalendarDate;
   });
 
   $$("[data-activity-tab]").forEach((button) => {

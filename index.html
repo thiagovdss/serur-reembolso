@@ -277,6 +277,28 @@
                   <button class="primary compact" data-open-modal="homeOfficeForm" type="button">Novo ajuste</button>
                 </div>
               </div>
+              <div class="team-calendar">
+                <div class="calendar-toolbar">
+                  <button class="secondary" id="prevCalendarMonth" type="button">&lt;</button>
+                  <select id="calendarMonth"></select>
+                  <select id="calendarYear"></select>
+                  <button class="secondary" id="nextCalendarMonth" type="button">&gt;</button>
+                  <button class="secondary" id="todayCalendar" type="button">Hoje</button>
+                </div>
+                <div class="calendar-period">
+                  <label>Inicio<input id="periodStart" type="date" /></label>
+                  <label>Fim<input id="periodEnd" type="date" /></label>
+                </div>
+                <div class="calendar-layout">
+                  <div>
+                    <div class="calendar-weekdays">
+                      <span>Do</span><span>Se</span><span>Te</span><span>Qu</span><span>Qu</span><span>Se</span><span>Sa</span>
+                    </div>
+                    <div class="calendar-grid" id="teamCalendar"></div>
+                  </div>
+                  <aside class="calendar-detail" id="calendarDetail"></aside>
+                </div>
+              </div>
               <div class="desk-grid" id="deskGrid"></div>
               <h2 class="section-subtitle">Registros e trocas</h2>
               <div class="calendar-list" id="homeOfficeList"></div>
