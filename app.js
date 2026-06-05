@@ -84,6 +84,14 @@ function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function fullSignupName() {
+  return `${$("#signupFirstName").value.trim()} ${$("#signupLastName").value.trim()}`.trim();
+}
+
+function displayUserName() {
+  return currentMember?.name || currentUser?.user_metadata?.full_name || "Usuario";
+}
+
 function refreshIcons() {
   if (window.lucide) window.lucide.createIcons();
 }
@@ -245,7 +253,7 @@ function renderDashboard() {
   const inProgressTasks = state.tasks.filter((task) => task.status === "Em andamento");
   const completedTasks = state.tasks.filter((task) => task.status === "Concluida");
   const overdueTasks = state.tasks.filter((task) => task.status === "Atrasada");
-  const firstName = (currentMember?.name || currentUser?.email || "Equipe").split(" ")[0];
+  const firstName = displayUserName().split(" ")[0];
   $("#dashboardGreeting").textContent = `Ola, ${firstName}`;
   $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
@@ -606,16 +614,17 @@ function renderSession() {
   const signedIn = isSignedIn();
   $("#loginScreen").classList.toggle("hidden", signedIn);
   $("#appShell").classList.toggle("hidden", !signedIn);
-  $("#currentUserName").textContent = currentMember?.name || currentUser?.email || "";
-  $("#sidebarUserName").textContent = currentMember?.name || currentUser?.email || "Serur";
-  $("#sidebarUserInitial").textContent = (currentMember?.name || currentUser?.email || "S").slice(0, 1).toUpperCase();
+  $("#currentUserName").textContent = signedIn ? displayUserName() : "";
+  $("#sidebarUserName").textContent = signedIn ? displayUserName() : "Serur";
+  $("#sidebarUserInitial").textContent = (signedIn ? displayUserName() : "S").slice(0, 1).toUpperCase();
   $("#authHint").textContent = hasSupabaseConfig
     ? "Use seu e-mail e senha. Se ainda nao tiver acesso, crie a primeira conta ou solicite cadastro."
     : "Modo local de teste. Configure o Supabase para publicar com banco de dados compartilhado.";
   $("#loginMode").classList.toggle("active", authMode === "login");
   $("#signupMode").classList.toggle("active", authMode === "signup");
   $("#signupFields").classList.toggle("hidden", authMode !== "signup");
-  $("#signupName").required = authMode === "signup";
+  $("#signupFirstName").required = authMode === "signup";
+  $("#signupLastName").required = authMode === "signup";
   $("#signupRole").required = authMode === "signup";
   $("#authSubmit").textContent = authMode === "signup" ? "Criar conta" : "Entrar";
 }
@@ -904,7 +913,7 @@ async function submitAuth(event) {
     if (!person && authMode === "signup") {
       person = {
         id: uid("p"),
-        name: $("#signupName").value.trim(),
+        name: fullSignupName(),
         role: $("#signupRole").value.trim(),
         email,
         fixed_home_days: [],
@@ -924,13 +933,24 @@ async function submitAuth(event) {
   }
 
   if (authMode === "signup") {
-    const { data, error } = await db.auth.signUp({ email, password });
+    const fullName = fullSignupName();
+    const { data, error } = await db.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          first_name: $("#signupFirstName").value.trim(),
+          last_name: $("#signupLastName").value.trim()
+        }
+      }
+    });
     if (error) throw error;
     currentUser = data.user;
     if (currentUser) {
       await insertRecord("people", {
         user_id: currentUser.id,
-        name: $("#signupName").value.trim(),
+        name: fullName,
         role: $("#signupRole").value.trim(),
         email,
         fixed_home_days: [],
