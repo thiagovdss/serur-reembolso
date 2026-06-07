@@ -87,6 +87,10 @@ create table if not exists public.documents (
   name text not null,
   type text not null,
   link text,
+  file_name text,
+  file_type text,
+  file_size bigint,
+  file_path text,
   created_at timestamptz not null default now()
 );
 
@@ -108,6 +112,10 @@ alter table public.reimbursements add column if not exists expense_type text;
 alter table public.reimbursements add column if not exists document_number text;
 alter table public.reimbursements add column if not exists notes text;
 alter table public.home_office_days add column if not exists action_type text not null default 'Home office extra';
+alter table public.documents add column if not exists file_name text;
+alter table public.documents add column if not exists file_type text;
+alter table public.documents add column if not exists file_size bigint;
+alter table public.documents add column if not exists file_path text;
 
 drop policy if exists team_members_authenticated_access on public.team_members;
 drop policy if exists clients_authenticated_access on public.clients;
@@ -126,3 +134,13 @@ create policy reimbursements_authenticated_access on public.reimbursements for a
 create policy vacations_authenticated_access on public.vacations for all to authenticated using (true) with check (true);
 create policy home_office_days_authenticated_access on public.home_office_days for all to authenticated using (true) with check (true);
 create policy documents_authenticated_access on public.documents for all to authenticated using (true) with check (true);
+
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('documents', 'documents', true, 52428800)
+on conflict (id) do update set public = true, file_size_limit = 52428800;
+
+drop policy if exists documents_storage_authenticated_access on storage.objects;
+create policy documents_storage_authenticated_access on storage.objects
+for all to authenticated
+using (bucket_id = 'documents')
+with check (bucket_id = 'documents');

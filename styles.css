@@ -856,6 +856,27 @@ textarea {
   border-top: 1px solid var(--line);
 }
 
+.doc-line > div:first-child {
+  min-width: 0;
+}
+
+.doc-link a,
+.doc-link span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--serur-orange-dark);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.doc-link svg {
+  width: 14px;
+  height: 14px;
+}
+
 .doc-line span,
 .small {
   color: var(--muted);

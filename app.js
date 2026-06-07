@@ -85,6 +85,22 @@ function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function fileSizeLabel(bytes) {
+  const size = Number(bytes || 0);
+  if (!size) return "";
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
+function safeFilePart(value) {
+  return String(value || "arquivo")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
 function fullSignupName() {
   return `${$("#signupFirstName").value.trim()} ${$("#signupLastName").value.trim()}`.trim();
 }
@@ -238,6 +254,38 @@ async function deleteRecord(key, id) {
 
   const { error } = await db.from(tableNames[key]).delete().eq("id", id);
   if (error) throw error;
+}
+
+async function uploadDocumentFile(file, clientId) {
+  if (!file || !file.name) return null;
+  if (!hasSupabaseConfig) {
+    toast("Anexo selecionado apenas para teste local. No site publicado, o arquivo sera salvo no Supabase.");
+    return {
+      file_name: file.name,
+      file_type: file.type || "Arquivo",
+      file_size: file.size || 0,
+      file_path: "",
+      link: ""
+    };
+  }
+
+  const path = `${clientId || "sem-cliente"}/${Date.now()}-${safeFilePart(file.name)}`;
+  const { error: uploadError } = await db.storage.from("documents").upload(path, file, { upsert: true });
+  if (uploadError) throw uploadError;
+
+  const { data } = db.storage.from("documents").getPublicUrl(path);
+  return {
+    file_name: file.name,
+    file_type: file.type || "Arquivo",
+    file_size: file.size || 0,
+    file_path: path,
+    link: data.publicUrl
+  };
+}
+
+async function removeDocumentFile(path) {
+  if (!path || !hasSupabaseConfig) return;
+  await db.storage.from("documents").remove([path]);
 }
 
 async function refreshData() {
@@ -636,9 +684,11 @@ function renderDocuments() {
           <div class="doc-line">
             <div>
               <strong>${doc.name}</strong>
-              <div class="small">${doc.type}</div>
+              <div class="small">${doc.type}${doc.file_name ? ` - ${doc.file_name}` : ""}${doc.file_size ? ` (${fileSizeLabel(doc.file_size)})` : ""}</div>
             </div>
-            <span>${doc.link || "Sem link"}</span>
+            <div class="doc-link">
+              ${doc.link ? `<a href="${doc.link}" target="_blank" rel="noopener">${icon("external-link")}Abrir</a>` : `<span>Sem anexo</span>`}
+            </div>
             <div class="row-actions">
               <button type="button" data-edit-document="${doc.id}">${icon("pencil")}Editar</button>
               <button class="danger" type="button" data-delete-document="${doc.id}">${icon("trash-2")}Excluir</button>
@@ -941,6 +991,7 @@ function editDocument(id) {
   form.elements.name.value = item.name || "";
   form.elements.type.value = item.type || "Passo a passo";
   form.elements.link.value = item.link || "";
+  form.elements.document_file.value = "";
   $("#documentFormTitle").textContent = "Editar documento";
   $("#documentSubmit").textContent = "Salvar alteracoes";
   $("#cancelDocumentEdit").classList.remove("hidden");
@@ -1100,13 +1151,23 @@ function setupForms() {
 
   $("#documentForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => {
+    await handleSubmit(event.currentTarget, async (data, form) => {
+      const current = data.id ? state.documents.find((item) => item.id === data.id) : null;
+      const file = form.elements.document_file.files[0];
+      const upload = file ? await uploadDocumentFile(file, data.client) : null;
       const payload = {
         client_id: data.client,
         name: data.name,
         type: data.type,
-        link: data.link
+        link: upload?.link || data.link || current?.link || "",
+        file_name: upload?.file_name || current?.file_name || "",
+        file_type: upload?.file_type || current?.file_type || "",
+        file_size: upload?.file_size || current?.file_size || null,
+        file_path: upload?.file_path || current?.file_path || ""
       };
+      if (upload?.file_path && current?.file_path && current.file_path !== upload.file_path) {
+        await removeDocumentFile(current.file_path);
+      }
       return data.id ? updateRecord("documents", data.id, payload) : insertRecord("documents", payload);
     }, event.currentTarget.elements.id.value ? "Documento atualizado." : "Documento adicionado.");
     resetDocumentForm();
@@ -1208,7 +1269,17 @@ function setupFilters() {
       editDocument(editButton.dataset.editDocument);
       return;
     }
-    if (deleteButton) await deleteEntity("documents", deleteButton.dataset.deleteDocument, "Documento excluido.");
+    if (deleteButton) {
+      const id = deleteButton.dataset.deleteDocument;
+      const item = state.documents.find((record) => record.id === id);
+      const confirmed = window.confirm("Excluir este documento?");
+      if (!confirmed) return;
+      await removeDocumentFile(item?.file_path);
+      await deleteRecord("documents", id);
+      if (isSignedIn()) await loadRemoteState();
+      renderAll();
+      toast("Documento excluido.");
+    }
   });
 }
 
