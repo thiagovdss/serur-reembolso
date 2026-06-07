@@ -124,10 +124,37 @@ button {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 18px 14px;
+  padding: 20px 8px 18px;
   background: var(--sidebar);
   color: #fffaf0;
   overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 0 12px 22px;
+  border-bottom: 1px solid rgba(255, 250, 240, 0.08);
+}
+
+.sidebar-brand strong,
+.sidebar-brand span {
+  display: block;
+}
+
+.sidebar-brand strong {
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  line-height: 1.08;
+  font-weight: 700;
+}
+
+.sidebar-brand span {
+  margin-top: 7px;
+  color: #8f877f;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
 }
 
 .brand {
@@ -175,7 +202,7 @@ button {
 .nav {
   display: grid;
   gap: 6px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .nav-item {
