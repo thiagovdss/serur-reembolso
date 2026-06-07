@@ -338,6 +338,16 @@ function renderDashboard() {
   const completedTasks = state.tasks.filter((task) => taskStatus(task.status) === "Concluído");
   const today = new Date().toISOString().slice(0, 10);
   const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluído" && task.due_date && task.due_date < today);
+  const totalReimbursements = state.reimbursements.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pendingReimbursements = state.reimbursements
+    .filter((item) => item.status === "Pendente" || reimbursementStatus(item.status) === "Em análise")
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const paidReimbursements = state.reimbursements
+    .filter((item) => item.status === "Pago")
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const overdueReimbursements = state.reimbursements
+    .filter((item) => item.status === "Vencido")
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const firstName = displayUserName().split(" ")[0];
   $("#dashboardGreeting").textContent = `Olá, ${firstName}`;
   $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -354,6 +364,34 @@ function renderDashboard() {
       <strong>${value}</strong>
     </article>
   `).join("");
+
+  $("#dashboardReimbursementMetrics").innerHTML = [
+    ["Total", money(totalReimbursements), "receipt-text", ""],
+    ["Pendente", money(pendingReimbursements), "hourglass", "icon-blue"],
+    ["Pago", money(paidReimbursements), "badge-check", "icon-green"],
+    ["Vencido", money(overdueReimbursements), "circle-alert", "icon-red"]
+  ].map(([label, value, iconName, theme]) => `
+    <article class="metric ${theme}">
+      <div class="metric-icon"><i data-lucide="${iconName}"></i></div>
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </article>
+  `).join("");
+
+  $("#dashboardReimbursements").innerHTML = state.reimbursements
+    .slice()
+    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+    .slice(0, 5)
+    .map((item) => `
+      <tr>
+        <td><strong>${item.description || "-"}</strong><br><span class="small">${item.expense_type || "Sem tipo"}</span></td>
+        <td>${clientName(item.client_id)}</td>
+        <td>${personName(item.person_id)}</td>
+        <td><strong>${money(item.amount)}</strong></td>
+        <td><span class="badge ${statusClass(reimbursementStatus(item.status))}">${reimbursementStatus(item.status)}</span></td>
+        <td>${formatDate(item.due_date)}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="6">Nenhum reembolso cadastrado.</td></tr>`;
 
   $("#todayLabel").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   $("#dashboardTasks").innerHTML = state.tasks

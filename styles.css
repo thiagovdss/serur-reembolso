@@ -441,6 +441,27 @@ h3 {
   margin-bottom: 22px;
 }
 
+.metrics-grid.compact {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.metrics-grid.compact .metric {
+  min-height: 88px;
+  padding: 14px;
+}
+
+.metrics-grid.compact .metric strong {
+  top: 20px;
+  right: 14px;
+  font-size: 19px;
+}
+
+.dashboard-reimbursements {
+  margin-bottom: 20px;
+}
+
 .metric {
   position: relative;
   min-height: 104px;
