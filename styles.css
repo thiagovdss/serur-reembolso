@@ -344,9 +344,22 @@ h3 {
 .primary,
 .secondary {
   min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border-radius: 8px;
   border: 1px solid transparent;
   font-weight: 650;
+}
+
+.primary svg,
+.secondary svg,
+.row-actions svg,
+.task-card-actions svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
 }
 
 .icon-button {
@@ -756,6 +769,17 @@ textarea {
   font-size: 11px;
 }
 
+.task-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.task-meta svg {
+  width: 13px;
+  height: 13px;
+}
+
 .task-status-control {
   max-width: 170px;
   margin-top: 10px;
@@ -1022,6 +1046,9 @@ textarea {
 
 .row-actions button {
   min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 5px 8px;
   border-radius: 8px;
   border: 1px solid var(--line);

@@ -97,6 +97,10 @@ function refreshIcons() {
   if (window.lucide) window.lucide.createIcons();
 }
 
+function icon(name) {
+  return `<i data-lucide="${name}" aria-hidden="true"></i>`;
+}
+
 function clientName(id) {
   return state.clients.find((client) => client.id === id)?.name || "Cliente nao encontrado";
 }
@@ -294,7 +298,7 @@ function renderDashboard() {
   $("#dashboardTasks").innerHTML = state.tasks
     .filter((task) => taskStatus(task.status) !== "Concluido")
     .slice(0, 5)
-    .map(taskCard)
+    .map((task) => taskCard(task, false))
     .join("") || `<div class="empty">Nenhuma atividade aberta.</div>`;
 
   const agenda = [
@@ -311,27 +315,30 @@ function renderDashboard() {
   `).join("") || `<div class="empty">Agenda sem registros.</div>`;
 }
 
-function taskCard(task) {
+function taskCard(task, editable = true) {
   const currentStatus = taskStatus(task.status);
   return `
     <article class="task-card">
       <strong>${task.title}</strong>
       <div class="task-meta">
         <span class="badge ${statusClass(currentStatus)}">${currentStatus}</span>
-        <span>${clientName(task.client_id)}</span>
-        <span>Prazo: ${formatDate(task.due_date)}</span>
+        <span>${icon("building-2")}${clientName(task.client_id)}</span>
+        <span>${icon("calendar") }Prazo: ${formatDate(task.due_date)}</span>
         <span>${task.priority}</span>
       </div>
       <div>${peopleChips(task.people_ids)}</div>
       ${task.description ? `<p class="small">${task.description}</p>` : ""}
+      ${editable ? `
       <label class="task-status-control">Andamento
         <select data-task-status="${task.id}">
           ${taskStatusOptions(currentStatus)}
         </select>
       </label>
       <div class="task-card-actions">
+        <button type="button" data-edit-task="${task.id}">${icon("pencil")}Editar</button>
         <button class="danger" type="button" data-delete-task="${task.id}">Excluir</button>
       </div>
+      ` : ""}
     </article>
   `;
 }
@@ -348,8 +355,8 @@ function renderClients() {
         <td><span class="badge">${client.status}</span></td>
         <td>
           <div class="row-actions">
-            <button type="button" data-edit-client="${client.id}">Editar</button>
-            <button class="danger" type="button" data-delete-client="${client.id}">Excluir</button>
+            <button type="button" data-edit-client="${client.id}">${icon("pencil")}Editar</button>
+            <button class="danger" type="button" data-delete-client="${client.id}">${icon("trash-2")}Excluir</button>
           </div>
         </td>
       </tr>
@@ -372,7 +379,7 @@ function renderTasks() {
     return `
       <section class="task-column">
         <h3>${status}<span>${tasks.length}</span></h3>
-        ${tasks.map(taskCard).join("") || `<div class="empty">Sem atividades.</div>`}
+        ${tasks.map((task) => taskCard(task, true)).join("") || `<div class="empty">Sem atividades.</div>`}
       </section>
     `;
   }).join("");
@@ -386,6 +393,10 @@ function renderAssignments() {
       <h3>${clientName(item.client_id)}</h3>
       <div>${peopleChips(item.people_ids)}</div>
       ${item.note ? `<p class="small">${item.note}</p>` : ""}
+      <div class="row-actions">
+        <button type="button" data-edit-assignment="${item.id}">${icon("pencil")}Editar</button>
+        <button class="danger" type="button" data-delete-assignment="${item.id}">${icon("trash-2")}Excluir</button>
+      </div>
     </article>
   `).join("") || `<div class="empty">Nenhuma distribuicao cadastrada.</div>`;
 }
@@ -433,8 +444,14 @@ function renderReimbursements() {
       <td><strong>${money(item.amount)}</strong></td>
       <td><span class="badge ${statusClass(item.status)}">${item.status}</span></td>
       <td>${item.document_number || "-"}</td>
+      <td>
+        <div class="row-actions">
+          <button type="button" data-edit-reimbursement="${item.id}">${icon("pencil")}Editar</button>
+          <button class="danger" type="button" data-delete-reimbursement="${item.id}">${icon("trash-2")}Excluir</button>
+        </div>
+      </td>
     </tr>
-  `).join("") || `<tr><td colspan="8">Nenhum reembolso cadastrado.</td></tr>`;
+  `).join("") || `<tr><td colspan="9">Nenhum reembolso cadastrado.</td></tr>`;
 }
 
 function renderVacations() {
@@ -445,6 +462,10 @@ function renderVacations() {
       <h3>${personName(item.person_id)}</h3>
       <p class="small">${formatDate(item.start_date)} a ${formatDate(item.end_date)}</p>
       ${item.note ? `<p>${item.note}</p>` : ""}
+      <div class="row-actions">
+        <button type="button" data-edit-vacation="${item.id}">${icon("pencil")}Editar</button>
+        <button class="danger" type="button" data-delete-vacation="${item.id}">${icon("trash-2")}Excluir</button>
+      </div>
     </article>
   `).join("") || `<div class="empty">Nenhum periodo cadastrado.</div>`;
 }
@@ -471,6 +492,10 @@ function renderHomeOffice() {
       <h3>${personName(item.person_id)}</h3>
       <p class="small">${formatDate(item.work_date)}</p>
       ${item.note ? `<p>${item.note}</p>` : ""}
+      <div class="row-actions">
+        <button type="button" data-edit-home-office="${item.id}">${icon("pencil")}Editar</button>
+        <button class="danger" type="button" data-delete-home-office="${item.id}">${icon("trash-2")}Excluir</button>
+      </div>
     </article>
   `).join("") || `<div class="empty">Nenhum home office cadastrado.</div>`;
 
@@ -614,6 +639,10 @@ function renderDocuments() {
               <div class="small">${doc.type}</div>
             </div>
             <span>${doc.link || "Sem link"}</span>
+            <div class="row-actions">
+              <button type="button" data-edit-document="${doc.id}">${icon("pencil")}Editar</button>
+              <button class="danger" type="button" data-delete-document="${doc.id}">${icon("trash-2")}Excluir</button>
+            </div>
           </div>
         `).join("") || `<p class="small">Pasta sem documentos.</p>`}
       </article>
@@ -632,8 +661,8 @@ function renderTeam() {
       <p class="small">Home office fixo: ${homeDaysText(person.fixed_home_days || [])}</p>
       <span class="badge">${person.status}</span>
       <div class="row-actions">
-        <button type="button" data-edit-team="${person.id}">Editar</button>
-        <button class="danger" type="button" data-delete-team="${person.id}">Excluir</button>
+        <button type="button" data-edit-team="${person.id}">${icon("pencil")}Editar</button>
+        <button class="danger" type="button" data-delete-team="${person.id}">${icon("trash-2")}Excluir</button>
       </div>
     </article>
   `).join("") || `<div class="empty">Nenhum membro cadastrado.</div>`;
@@ -691,6 +720,12 @@ function openModal(id, options = {}) {
     modal.reset();
     if (id === "clientForm") resetClientForm(false);
     if (id === "teamForm") resetTeamForm(false);
+    if (id === "taskForm") resetTaskForm(false);
+    if (id === "assignmentForm") resetAssignmentForm(false);
+    if (id === "reimbursementForm") resetReimbursementForm(false);
+    if (id === "vacationForm") resetVacationForm(false);
+    if (id === "homeOfficeForm") resetHomeOfficeForm(false);
+    if (id === "documentForm") resetDocumentForm(false);
   }
   $("#modalBackdrop").classList.remove("hidden");
   modal.classList.remove("hidden");
@@ -705,6 +740,13 @@ function closeModals(reset = true) {
   $("#modalBackdrop").classList.add("hidden");
   document.body.classList.remove("modal-open");
   if (reset) resetClientForm(false);
+  if (reset) resetTeamForm(false);
+  if (reset) resetTaskForm(false);
+  if (reset) resetAssignmentForm(false);
+  if (reset) resetReimbursementForm(false);
+  if (reset) resetVacationForm(false);
+  if (reset) resetHomeOfficeForm(false);
+  if (reset) resetDocumentForm(false);
 }
 
 function resetClientForm(close = false) {
@@ -725,6 +767,46 @@ function resetTeamForm(close = false) {
   $("#teamSubmit").textContent = "Cadastrar membro";
   $("#cancelTeamEdit").classList.add("hidden");
   if (close) closeModals(false);
+}
+
+function resetEditForm(formId, titleId, title, submitId, submitText, cancelId, close = false) {
+  const form = $(`#${formId}`);
+  form.reset();
+  form.elements.id.value = "";
+  $(`#${titleId}`).textContent = title;
+  $(`#${submitId}`).textContent = submitText;
+  $(`#${cancelId}`).classList.add("hidden");
+  if (close) closeModals(false);
+}
+
+function resetTaskForm(close = false) {
+  resetEditForm("taskForm", "taskFormTitle", "Nova atividade", "taskSubmit", "Criar atividade", "cancelTaskEdit", close);
+}
+
+function resetAssignmentForm(close = false) {
+  resetEditForm("assignmentForm", "assignmentFormTitle", "Nova distribuicao", "assignmentSubmit", "Salvar distribuicao", "cancelAssignmentEdit", close);
+}
+
+function resetReimbursementForm(close = false) {
+  resetEditForm("reimbursementForm", "reimbursementFormTitle", "Novo reembolso", "reimbursementSubmit", "Cadastrar reembolso", "cancelReimbursementEdit", close);
+}
+
+function resetVacationForm(close = false) {
+  resetEditForm("vacationForm", "vacationFormTitle", "Novo periodo", "vacationSubmit", "Registrar ferias", "cancelVacationEdit", close);
+}
+
+function resetHomeOfficeForm(close = false) {
+  resetEditForm("homeOfficeForm", "homeOfficeFormTitle", "Novo ajuste", "homeOfficeSubmit", "Registrar ajuste", "cancelHomeOfficeEdit", close);
+}
+
+function resetDocumentForm(close = false) {
+  resetEditForm("documentForm", "documentFormTitle", "Novo documento", "documentSubmit", "Adicionar documento", "cancelDocumentEdit", close);
+}
+
+function setSelectedValues(select, values = []) {
+  Array.from(select.options).forEach((option) => {
+    option.selected = values.includes(option.value);
+  });
 }
 
 function editClient(id) {
@@ -764,6 +846,107 @@ function editTeamMember(id) {
   openModal("teamForm", { reset: false });
 }
 
+function editTask(id) {
+  const task = state.tasks.find((item) => item.id === id);
+  if (!task) return;
+  const form = $("#taskForm");
+  form.elements.id.value = task.id;
+  form.elements.title.value = task.title || "";
+  form.elements.client.value = task.client_id || "";
+  setSelectedValues(form.elements.people, task.people_ids || []);
+  form.elements.category.value = task.category || "Reembolso";
+  form.elements.priority.value = task.priority || "Media";
+  form.elements.due.value = task.due_date || "";
+  form.elements.status.value = taskStatus(task.status);
+  form.elements.description.value = task.description || "";
+  $("#taskFormTitle").textContent = "Editar atividade";
+  $("#taskSubmit").textContent = "Salvar alteracoes";
+  $("#cancelTaskEdit").classList.remove("hidden");
+  openModal("taskForm", { reset: false });
+}
+
+function editAssignment(id) {
+  const item = state.assignments.find((record) => record.id === id);
+  if (!item) return;
+  const form = $("#assignmentForm");
+  form.elements.id.value = item.id;
+  form.elements.month.value = item.month || "";
+  form.elements.client.value = item.client_id || "";
+  setSelectedValues(form.elements.people, item.people_ids || []);
+  form.elements.note.value = item.note || "";
+  $("#assignmentFormTitle").textContent = "Editar distribuicao";
+  $("#assignmentSubmit").textContent = "Salvar alteracoes";
+  $("#cancelAssignmentEdit").classList.remove("hidden");
+  openModal("assignmentForm", { reset: false });
+}
+
+function editReimbursement(id) {
+  const item = state.reimbursements.find((record) => record.id === id);
+  if (!item) return;
+  const form = $("#reimbursementForm");
+  form.elements.id.value = item.id;
+  form.elements.period.value = item.period || "";
+  form.elements.due_date.value = item.due_date || "";
+  form.elements.description.value = item.description || "";
+  form.elements.expense_type.value = item.expense_type || "Custas";
+  form.elements.client.value = item.client_id || "";
+  form.elements.person.value = item.person_id || "";
+  form.elements.amount.value = item.amount || "";
+  form.elements.status.value = item.status || "Pendente";
+  form.elements.document_number.value = item.document_number || "";
+  form.elements.notes.value = item.notes || "";
+  $("#reimbursementFormTitle").textContent = "Editar reembolso";
+  $("#reimbursementSubmit").textContent = "Salvar alteracoes";
+  $("#cancelReimbursementEdit").classList.remove("hidden");
+  openModal("reimbursementForm", { reset: false });
+}
+
+function editVacation(id) {
+  const item = state.vacations.find((record) => record.id === id);
+  if (!item) return;
+  const form = $("#vacationForm");
+  form.elements.id.value = item.id;
+  form.elements.person.value = item.person_id || "";
+  form.elements.start.value = item.start_date || "";
+  form.elements.end.value = item.end_date || "";
+  form.elements.status.value = item.status || "Programada";
+  form.elements.note.value = item.note || "";
+  $("#vacationFormTitle").textContent = "Editar periodo";
+  $("#vacationSubmit").textContent = "Salvar alteracoes";
+  $("#cancelVacationEdit").classList.remove("hidden");
+  openModal("vacationForm", { reset: false });
+}
+
+function editHomeOffice(id) {
+  const item = state.homeOffice.find((record) => record.id === id);
+  if (!item) return;
+  const form = $("#homeOfficeForm");
+  form.elements.id.value = item.id;
+  form.elements.person.value = item.person_id || "";
+  form.elements.date.value = item.work_date || "";
+  form.elements.action_type.value = item.action_type || "Home office extra";
+  form.elements.note.value = item.note || "";
+  $("#homeOfficeFormTitle").textContent = "Editar ajuste";
+  $("#homeOfficeSubmit").textContent = "Salvar alteracoes";
+  $("#cancelHomeOfficeEdit").classList.remove("hidden");
+  openModal("homeOfficeForm", { reset: false });
+}
+
+function editDocument(id) {
+  const item = state.documents.find((record) => record.id === id);
+  if (!item) return;
+  const form = $("#documentForm");
+  form.elements.id.value = item.id;
+  form.elements.client.value = item.client_id || "";
+  form.elements.name.value = item.name || "";
+  form.elements.type.value = item.type || "Passo a passo";
+  form.elements.link.value = item.link || "";
+  $("#documentFormTitle").textContent = "Editar documento";
+  $("#documentSubmit").textContent = "Salvar alteracoes";
+  $("#cancelDocumentEdit").classList.remove("hidden");
+  openModal("documentForm", { reset: false });
+}
+
 async function handleSubmit(form, work, message) {
   const data = Object.fromEntries(new FormData(form).entries());
   await work(data, form);
@@ -788,6 +971,15 @@ async function deleteTask(id) {
   if (isSignedIn()) await loadRemoteState();
   renderAll();
   toast("Atividade excluida.");
+}
+
+async function deleteEntity(key, id, message, confirmMessage = "Excluir este registro?") {
+  const confirmed = window.confirm(confirmMessage);
+  if (!confirmed) return;
+  await deleteRecord(key, id);
+  if (isSignedIn()) await loadRemoteState();
+  renderAll();
+  toast(message);
 }
 
 function setupForms() {
@@ -826,74 +1018,98 @@ function setupForms() {
 
   $("#taskForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data, form) => insertRecord("tasks", {
-      title: data.title,
-      client_id: data.client,
-      people_ids: selectedValues(form.elements.people),
-      category: data.category,
-      priority: data.priority,
-      due_date: data.due,
-      status: data.status,
-      description: data.description
-    }), "Atividade criada.");
+    await handleSubmit(event.currentTarget, (data, form) => {
+      const payload = {
+        title: data.title,
+        client_id: data.client,
+        people_ids: selectedValues(form.elements.people),
+        category: data.category,
+        priority: data.priority,
+        due_date: data.due,
+        status: data.status,
+        description: data.description
+      };
+      return data.id ? updateRecord("tasks", data.id, payload) : insertRecord("tasks", payload);
+    }, event.currentTarget.elements.id.value ? "Atividade atualizada." : "Atividade criada.");
+    resetTaskForm();
   });
 
   $("#assignmentForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data, form) => insertRecord("assignments", {
-      month: data.month,
-      client_id: data.client,
-      people_ids: selectedValues(form.elements.people),
-      note: data.note
-    }), "Distribuicao salva.");
+    await handleSubmit(event.currentTarget, (data, form) => {
+      const payload = {
+        month: data.month,
+        client_id: data.client,
+        people_ids: selectedValues(form.elements.people),
+        note: data.note
+      };
+      return data.id ? updateRecord("assignments", data.id, payload) : insertRecord("assignments", payload);
+    }, event.currentTarget.elements.id.value ? "Distribuicao atualizada." : "Distribuicao salva.");
+    resetAssignmentForm();
   });
 
   $("#reimbursementForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("reimbursements", {
-      client_id: data.client,
-      person_id: data.person,
-      period: data.period,
-      due_date: data.due_date || null,
-      description: data.description,
-      expense_type: data.expense_type,
-      amount: Number(data.amount),
-      status: data.status,
-      document_number: data.document_number,
-      notes: data.notes
-    }), "Reembolso cadastrado.");
+    await handleSubmit(event.currentTarget, (data) => {
+      const payload = {
+        client_id: data.client,
+        person_id: data.person,
+        period: data.period,
+        due_date: data.due_date || null,
+        description: data.description,
+        expense_type: data.expense_type,
+        amount: Number(data.amount),
+        status: data.status,
+        document_number: data.document_number,
+        notes: data.notes
+      };
+      return data.id ? updateRecord("reimbursements", data.id, payload) : insertRecord("reimbursements", payload);
+    }, event.currentTarget.elements.id.value ? "Reembolso atualizado." : "Reembolso cadastrado.");
+    resetReimbursementForm();
   });
 
   $("#vacationForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("vacations", {
-      person_id: data.person,
-      start_date: data.start,
-      end_date: data.end,
-      status: data.status,
-      note: data.note
-    }), "Ferias registradas.");
+    await handleSubmit(event.currentTarget, (data) => {
+      const payload = {
+        person_id: data.person,
+        start_date: data.start,
+        end_date: data.end,
+        status: data.status,
+        note: data.note
+      };
+      return data.id ? updateRecord("vacations", data.id, payload) : insertRecord("vacations", payload);
+    }, event.currentTarget.elements.id.value ? "Ferias atualizadas." : "Ferias registradas.");
+    resetVacationForm();
   });
 
   $("#homeOfficeForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("homeOffice", {
-      person_id: data.person,
-      client_id: null,
-      work_date: data.date,
-      action_type: data.action_type,
-      note: data.note
-    }), "Home office registrado.");
+    await handleSubmit(event.currentTarget, (data) => {
+      const payload = {
+        person_id: data.person,
+        client_id: null,
+        work_date: data.date,
+        action_type: data.action_type,
+        note: data.note
+      };
+      return data.id ? updateRecord("homeOffice", data.id, payload) : insertRecord("homeOffice", payload);
+    }, event.currentTarget.elements.id.value ? "Home office atualizado." : "Home office registrado.");
+    resetHomeOfficeForm();
   });
 
   $("#documentForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await handleSubmit(event.currentTarget, (data) => insertRecord("documents", {
-      client_id: data.client,
-      name: data.name,
-      type: data.type,
-      link: data.link
-    }), "Documento adicionado.");
+    await handleSubmit(event.currentTarget, (data) => {
+      const payload = {
+        client_id: data.client,
+        name: data.name,
+        type: data.type,
+        link: data.link
+      };
+      return data.id ? updateRecord("documents", data.id, payload) : insertRecord("documents", payload);
+    }, event.currentTarget.elements.id.value ? "Documento atualizado." : "Documento adicionado.");
+    resetDocumentForm();
   });
 }
 
@@ -918,19 +1134,13 @@ function setupFilters() {
     await changeTaskStatus(id, event.target.value);
   });
   $("#taskColumns").addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-delete-task]");
-    if (!button) return;
-    await deleteTask(button.dataset.deleteTask);
-  });
-  $("#dashboardTasks").addEventListener("change", async (event) => {
-    const id = event.target.dataset.taskStatus;
-    if (!id) return;
-    await changeTaskStatus(id, event.target.value);
-  });
-  $("#dashboardTasks").addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-delete-task]");
-    if (!button) return;
-    await deleteTask(button.dataset.deleteTask);
+    const editButton = event.target.closest("[data-edit-task]");
+    const deleteButton = event.target.closest("[data-delete-task]");
+    if (editButton) {
+      editTask(editButton.dataset.editTask);
+      return;
+    }
+    if (deleteButton) await deleteTask(deleteButton.dataset.deleteTask);
   });
   [
     "#reimbursementPeriodFilter",
@@ -949,6 +1159,56 @@ function setupFilters() {
     $("#reimbursementTypeFilter").value = "";
     $("#reimbursementTextFilter").value = "";
     renderReimbursements();
+  });
+
+  $("#assignmentGrid").addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-assignment]");
+    const deleteButton = event.target.closest("[data-delete-assignment]");
+    if (editButton) {
+      editAssignment(editButton.dataset.editAssignment);
+      return;
+    }
+    if (deleteButton) await deleteEntity("assignments", deleteButton.dataset.deleteAssignment, "Distribuicao excluida.");
+  });
+
+  $("#reimbursementsTable").addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-reimbursement]");
+    const deleteButton = event.target.closest("[data-delete-reimbursement]");
+    if (editButton) {
+      editReimbursement(editButton.dataset.editReimbursement);
+      return;
+    }
+    if (deleteButton) await deleteEntity("reimbursements", deleteButton.dataset.deleteReimbursement, "Reembolso excluido.");
+  });
+
+  $("#vacationList").addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-vacation]");
+    const deleteButton = event.target.closest("[data-delete-vacation]");
+    if (editButton) {
+      editVacation(editButton.dataset.editVacation);
+      return;
+    }
+    if (deleteButton) await deleteEntity("vacations", deleteButton.dataset.deleteVacation, "Ferias excluidas.");
+  });
+
+  $("#homeOfficeList").addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-home-office]");
+    const deleteButton = event.target.closest("[data-delete-home-office]");
+    if (editButton) {
+      editHomeOffice(editButton.dataset.editHomeOffice);
+      return;
+    }
+    if (deleteButton) await deleteEntity("homeOffice", deleteButton.dataset.deleteHomeOffice, "Home office excluido.");
+  });
+
+  $("#documentsGrid").addEventListener("click", async (event) => {
+    const editButton = event.target.closest("[data-edit-document]");
+    const deleteButton = event.target.closest("[data-delete-document]");
+    if (editButton) {
+      editDocument(editButton.dataset.editDocument);
+      return;
+    }
+    if (deleteButton) await deleteEntity("documents", deleteButton.dataset.deleteDocument, "Documento excluido.");
   });
 }
 
@@ -1100,6 +1360,12 @@ function setupActions() {
 
   $("#cancelClientEdit").addEventListener("click", () => resetClientForm(true));
   $("#cancelTeamEdit").addEventListener("click", () => resetTeamForm(true));
+  $("#cancelTaskEdit").addEventListener("click", () => resetTaskForm(true));
+  $("#cancelAssignmentEdit").addEventListener("click", () => resetAssignmentForm(true));
+  $("#cancelReimbursementEdit").addEventListener("click", () => resetReimbursementForm(true));
+  $("#cancelVacationEdit").addEventListener("click", () => resetVacationForm(true));
+  $("#cancelHomeOfficeEdit").addEventListener("click", () => resetHomeOfficeForm(true));
+  $("#cancelDocumentEdit").addEventListener("click", () => resetDocumentForm(true));
 
   $("#clientsTable").addEventListener("click", async (event) => {
     const editId = event.target.dataset.editClient;
