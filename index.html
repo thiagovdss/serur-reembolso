@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Serur - Reembolso</title>
+    <title>Reembolso</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,14 +12,7 @@
   <body>
     <section class="login-screen" id="loginScreen">
       <form class="login-card" id="loginForm">
-        <div class="brand login-brand">
-          <div class="brand-mark" aria-hidden="true">S</div>
-          <div>
-            <strong>Serur</strong>
-            <span>Reembolso</span>
-          </div>
-        </div>
-        <h1>Serur - Reembolso</h1>
+        <h1>Reembolso</h1>
         <div class="auth-tabs">
           <button class="secondary active" id="loginMode" type="button">Entrar</button>
           <button class="secondary" id="signupMode" type="button">Criar conta</button>
@@ -38,13 +31,6 @@
 
     <div class="app-shell hidden" id="appShell">
       <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">S</div>
-          <div>
-            <strong>Serur</strong>
-            <span>Reembolso</span>
-          </div>
-        </div>
         <nav class="nav" aria-label="Navegacao principal">
           <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
           <button class="nav-item" data-view="clientes"><i data-lucide="briefcase-business"></i><span>Clientes</span></button>
@@ -58,7 +44,7 @@
         <div class="sidebar-user">
           <div class="sidebar-avatar" id="sidebarUserInitial">S</div>
           <div>
-            <strong id="sidebarUserName">Serur</strong>
+            <strong id="sidebarUserName">Usuario</strong>
             <span>Gestao interna</span>
           </div>
         </div>
@@ -160,10 +146,9 @@
           <div class="toolbar">
             <select id="taskStatusFilter">
               <option value="">Todos os status</option>
-              <option>Pendente</option>
-              <option>Em andamento</option>
-              <option>Aguardando cliente</option>
-              <option>Concluida</option>
+              <option>A fazer</option>
+              <option>Fazendo</option>
+              <option>Concluido</option>
               <option>Atrasada</option>
             </select>
             <select id="taskClientFilter"></select>
@@ -179,7 +164,7 @@
               <label>Categoria<select name="category"><option>Reembolso</option><option>Atendimento</option><option>Consultoria</option><option>Administrativo</option><option>Financeiro</option></select></label>
               <label>Prioridade<select name="priority"><option>Media</option><option>Alta</option><option>Urgente</option><option>Baixa</option></select></label>
               <label>Prazo<input type="date" required name="due" /></label>
-              <label>Status<select name="status"><option>Pendente</option><option>Em andamento</option><option>Aguardando cliente</option><option>Concluida</option></select></label>
+              <label>Status<select name="status"><option>A fazer</option><option>Fazendo</option><option>Concluido</option></select></label>
               <label>Descricao<textarea name="description" rows="4"></textarea></label>
               <button class="primary" type="submit">Criar atividade</button>
             </form>

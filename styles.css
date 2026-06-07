@@ -667,18 +667,21 @@ textarea {
   background: #f4ead9;
 }
 
-.badge.Pendente {
+.badge.Pendente,
+.badge.A-fazer {
   color: #7c4a00;
   background: #fff0c6;
 }
 
 .badge.Em,
-.badge.Aguardando {
+.badge.Em-analise,
+.badge.Fazendo {
   color: #164f75;
   background: #dff1ff;
 }
 
 .badge.Concluida,
+.badge.Concluido,
 .badge.Pago,
 .badge.Aprovada {
   color: #176341;
@@ -744,6 +747,17 @@ textarea {
   gap: 6px;
   color: var(--muted);
   font-size: 11px;
+}
+
+.task-status-control {
+  max-width: 170px;
+  margin-top: 10px;
+}
+
+.task-status-control select {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 12px;
 }
 
 .timeline,

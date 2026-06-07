@@ -31,6 +31,7 @@ let currentUser = null;
 let currentMember = null;
 let calendarCursor = new Date();
 let selectedCalendarDate = new Date().toISOString().slice(0, 10);
+const TASK_STATUSES = ["A fazer", "Fazendo", "Concluido", "Atrasada"];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -118,7 +119,22 @@ function homeDaysText(days = []) {
 }
 
 function statusClass(status) {
-  return (status || "").split(" ")[0];
+  return (status || "").replaceAll(" ", "-");
+}
+
+function taskStatus(status) {
+  const aliases = {
+    "Pendente": "A fazer",
+    "Em andamento": "Fazendo",
+    "Aguardando cliente": "A fazer",
+    "Concluida": "Concluido"
+  };
+  return aliases[status] || status || "A fazer";
+}
+
+function taskStatusOptions(selectedStatus) {
+  const selected = taskStatus(selectedStatus);
+  return TASK_STATUSES.map((status) => `<option value="${status}" ${status === selected ? "selected" : ""}>${status}</option>`).join("");
 }
 
 function toast(message) {
@@ -249,17 +265,17 @@ function fillAllSelects() {
 }
 
 function renderDashboard() {
-  const pendingTasks = state.tasks.filter((task) => task.status !== "Concluida");
-  const inProgressTasks = state.tasks.filter((task) => task.status === "Em andamento");
-  const completedTasks = state.tasks.filter((task) => task.status === "Concluida");
-  const overdueTasks = state.tasks.filter((task) => task.status === "Atrasada");
+  const pendingTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluido");
+  const inProgressTasks = state.tasks.filter((task) => taskStatus(task.status) === "Fazendo");
+  const completedTasks = state.tasks.filter((task) => taskStatus(task.status) === "Concluido");
+  const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) === "Atrasada");
   const firstName = displayUserName().split(" ")[0];
   $("#dashboardGreeting").textContent = `Ola, ${firstName}`;
   $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   $("#metricsGrid").innerHTML = [
     ["Total de Atividades", state.tasks.length, "square-check-big", ""],
-    ["Em Andamento", inProgressTasks.length, "clock", "icon-blue"],
+    ["Fazendo", inProgressTasks.length, "clock", "icon-blue"],
     ["Concluidas", completedTasks.length, "trending-up", "icon-green"],
     ["Atrasadas", overdueTasks.length, "circle-alert", "icon-red"]
   ].map(([label, value, icon, theme]) => `
@@ -272,7 +288,7 @@ function renderDashboard() {
 
   $("#todayLabel").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   $("#dashboardTasks").innerHTML = state.tasks
-    .filter((task) => task.status !== "Concluida")
+    .filter((task) => taskStatus(task.status) !== "Concluido")
     .slice(0, 5)
     .map(taskCard)
     .join("") || `<div class="empty">Nenhuma atividade aberta.</div>`;
@@ -292,17 +308,23 @@ function renderDashboard() {
 }
 
 function taskCard(task) {
+  const currentStatus = taskStatus(task.status);
   return `
     <article class="task-card">
       <strong>${task.title}</strong>
       <div class="task-meta">
-        <span class="badge ${statusClass(task.status)}">${task.status}</span>
+        <span class="badge ${statusClass(currentStatus)}">${currentStatus}</span>
         <span>${clientName(task.client_id)}</span>
         <span>Prazo: ${formatDate(task.due_date)}</span>
         <span>${task.priority}</span>
       </div>
       <div>${peopleChips(task.people_ids)}</div>
       ${task.description ? `<p class="small">${task.description}</p>` : ""}
+      <label class="task-status-control">Andamento
+        <select data-task-status="${task.id}">
+          ${taskStatusOptions(currentStatus)}
+        </select>
+      </label>
     </article>
   `;
 }
@@ -330,16 +352,16 @@ function renderClients() {
 }
 
 function renderTasks() {
-  const statuses = ["Pendente", "Em andamento", "Aguardando cliente", "Concluida", "Atrasada"];
   const statusFilter = $("#taskStatusFilter").value;
   const clientFilter = $("#taskClientFilter").value;
   const filtered = state.tasks.filter((task) => {
     const haystack = `${task.title} ${clientName(task.client_id)} ${(task.people_ids || []).map(personName).join(" ")}`;
-    return matchesSearch(haystack) && (!statusFilter || task.status === statusFilter) && (!clientFilter || task.client_id === clientFilter);
+    const currentStatus = taskStatus(task.status);
+    return matchesSearch(haystack) && (!statusFilter || currentStatus === statusFilter) && (!clientFilter || task.client_id === clientFilter);
   });
 
-  $("#taskColumns").innerHTML = statuses.map((status) => {
-    const tasks = filtered.filter((task) => task.status === status);
+  $("#taskColumns").innerHTML = TASK_STATUSES.map((status) => {
+    const tasks = filtered.filter((task) => taskStatus(task.status) === status);
     return `
       <section class="task-column">
         <h3>${status}<span>${tasks.length}</span></h3>
@@ -615,7 +637,7 @@ function renderSession() {
   $("#loginScreen").classList.toggle("hidden", signedIn);
   $("#appShell").classList.toggle("hidden", !signedIn);
   $("#currentUserName").textContent = signedIn ? displayUserName() : "";
-  $("#sidebarUserName").textContent = signedIn ? displayUserName() : "Serur";
+  $("#sidebarUserName").textContent = signedIn ? displayUserName() : "Usuario";
   $("#sidebarUserInitial").textContent = (signedIn ? displayUserName() : "S").slice(0, 1).toUpperCase();
   $("#authHint").textContent = hasSupabaseConfig
     ? "Use seu e-mail e senha. Se ainda nao tiver acesso, crie a primeira conta ou solicite cadastro."
@@ -745,6 +767,13 @@ async function handleSubmit(form, work, message) {
   toast(message);
 }
 
+async function changeTaskStatus(id, status) {
+  await updateRecord("tasks", id, { status });
+  if (isSignedIn()) await loadRemoteState();
+  renderAll();
+  toast("Andamento atualizado.");
+}
+
 function setupForms() {
   $("#clientForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -867,6 +896,16 @@ function setupFilters() {
   $("#globalSearch").addEventListener("input", renderAll);
   $("#taskStatusFilter").addEventListener("change", renderTasks);
   $("#taskClientFilter").addEventListener("change", renderTasks);
+  $("#taskColumns").addEventListener("change", async (event) => {
+    const id = event.target.dataset.taskStatus;
+    if (!id) return;
+    await changeTaskStatus(id, event.target.value);
+  });
+  $("#dashboardTasks").addEventListener("change", async (event) => {
+    const id = event.target.dataset.taskStatus;
+    if (!id) return;
+    await changeTaskStatus(id, event.target.value);
+  });
   [
     "#reimbursementPeriodFilter",
     "#reimbursementStatusFilter",
