@@ -22,7 +22,7 @@
         <div id="signupFields" class="hidden">
           <label>Nome<input id="signupFirstName" /></label>
           <label>Sobrenome<input id="signupLastName" /></label>
-          <label>Funcao<input id="signupRole" value="Administrador" /></label>
+          <label>Função<input id="signupRole" value="Administrador" /></label>
         </div>
         <label>Senha<input id="authPassword" required type="password" minlength="6" /></label>
         <button class="primary" id="authSubmit" type="submit">Entrar</button>
@@ -35,12 +35,12 @@
           <strong>Gestão Interna</strong>
           <span>Reembolso</span>
         </div>
-        <nav class="nav" aria-label="Navegacao principal">
+        <nav class="nav" aria-label="Navegação principal">
           <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
           <button class="nav-item" data-view="clientes"><i data-lucide="briefcase-business"></i><span>Clientes</span></button>
           <button class="nav-item" data-view="atividades"><i data-lucide="square-check-big"></i><span>Atividades</span></button>
           <button class="nav-item" data-view="reembolsos"><i data-lucide="receipt-text"></i><span>Reembolsos</span></button>
-          <button class="nav-item" data-view="ferias"><i data-lucide="calendar-days"></i><span>Ferias</span></button>
+          <button class="nav-item" data-view="ferias"><i data-lucide="calendar-days"></i><span>Férias</span></button>
           <button class="nav-item" data-view="homeoffice"><i data-lucide="home"></i><span>Home office</span></button>
           <button class="nav-item" data-view="documentos"><i data-lucide="folder-open"></i><span>Documentos</span></button>
           <button class="nav-item" data-view="equipe"><i data-lucide="users"></i><span>Equipe</span></button>
@@ -48,8 +48,8 @@
         <div class="sidebar-user">
           <div class="sidebar-avatar" id="sidebarUserInitial">S</div>
           <div>
-            <strong id="sidebarUserName">Usuario</strong>
-            <span>Gestao interna</span>
+            <strong id="sidebarUserName">Usuário</strong>
+            <span>Gestão interna</span>
           </div>
         </div>
       </aside>
@@ -64,7 +64,7 @@
             <span class="user-pill" id="currentUserName"></span>
             <div class="search-box">
               <i data-lucide="search" aria-hidden="true"></i>
-              <input id="globalSearch" type="search" placeholder="Buscar cliente, atividade ou responsavel" />
+              <input id="globalSearch" type="search" placeholder="Buscar cliente, atividade ou responsável" />
             </div>
             <button class="icon-button" id="resetData" title="Atualizar dados" type="button"><i data-lucide="refresh-cw"></i></button>
             <button class="secondary" id="logout" type="button"><i data-lucide="log-out"></i>Sair</button>
@@ -73,7 +73,7 @@
 
         <section class="view active" id="dashboard">
           <div class="dashboard-intro">
-            <h2 id="dashboardGreeting">Ola</h2>
+            <h2 id="dashboardGreeting">Olá</h2>
             <p id="dashboardDate"></p>
           </div>
           <div class="metrics-grid" id="metricsGrid"></div>
@@ -88,7 +88,7 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Agenda da equipe</h2>
-                <span>Ferias e home office</span>
+                <span>Férias e home office</span>
               </div>
               <div class="timeline" id="teamAgenda"></div>
             </section>
@@ -112,9 +112,9 @@
                       <th>Cliente</th>
                       <th>CPF/CNPJ</th>
                       <th>Contato</th>
-                      <th>Responsavel</th>
+                      <th>Responsável</th>
                       <th>Status</th>
-                      <th>Acoes</th>
+                      <th>Ações</th>
                     </tr>
                   </thead>
                   <tbody id="clientsTable"></tbody>
@@ -130,9 +130,9 @@
               <label>Empresa<input name="company" /></label>
               <label>E-mail<input type="email" name="email" /></label>
               <label>Telefone<input name="phone" /></label>
-              <label>Responsavel<input name="owner" /></label>
+              <label>Responsável<input name="owner" /></label>
               <label>Status<select name="status"><option>Ativo</option><option>Pausado</option><option>Encerrado</option></select></label>
-              <label>Observacoes<textarea name="notes" rows="3"></textarea></label>
+              <label>Observações<textarea name="notes" rows="3"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelClientEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
                 <button class="primary" id="clientSubmit" type="submit">Cadastrar cliente</button>
@@ -144,7 +144,7 @@
         <section class="view" id="atividades">
           <div class="segment-tabs">
             <button class="secondary active" data-activity-tab="tasks" type="button">Atividades</button>
-            <button class="secondary" data-activity-tab="assignments" type="button">Distribuicao mensal</button>
+            <button class="secondary" data-activity-tab="assignments" type="button">Distribuição mensal</button>
             <button class="primary compact" data-open-modal="taskForm" type="button"><i data-lucide="plus"></i>Nova atividade</button>
           </div>
           <div class="toolbar">
@@ -152,8 +152,8 @@
               <option value="">Todos os status</option>
               <option>A Fazer</option>
               <option>Em Andamento</option>
-              <option>Em Revisao</option>
-              <option>Concluido</option>
+              <option>Em Revisão</option>
+              <option>Concluído</option>
             </select>
             <select id="taskClientFilter"></select>
           </div>
@@ -163,14 +163,14 @@
               <button class="modal-close" data-close-modal type="button">X</button>
               <h2 id="taskFormTitle">Nova atividade</h2>
               <input type="hidden" name="id" />
-              <label>Titulo<input required name="title" /></label>
+              <label>Título<input required name="title" /></label>
               <label>Cliente<select required name="client" id="taskClientSelect"></select></label>
-              <label>Responsaveis<select required multiple name="people" id="taskPeopleSelect"></select></label>
+              <label>Responsáveis<select required multiple name="people" id="taskPeopleSelect"></select></label>
               <label>Categoria<select name="category"><option>Reembolso</option><option>Atendimento</option><option>Consultoria</option><option>Administrativo</option><option>Financeiro</option></select></label>
-              <label>Prioridade<select name="priority"><option>Media</option><option>Alta</option><option>Urgente</option><option>Baixa</option></select></label>
+              <label>Prioridade<select name="priority"><option>Média</option><option>Alta</option><option>Urgente</option><option>Baixa</option></select></label>
               <label>Prazo<input type="date" required name="due" /></label>
-              <label>Status<select name="status"><option>A Fazer</option><option>Em Andamento</option><option>Em Revisao</option><option>Concluido</option></select></label>
-              <label>Descricao<textarea name="description" rows="4"></textarea></label>
+              <label>Status<select name="status"><option>A Fazer</option><option>Em Andamento</option><option>Em Revisão</option><option>Concluído</option></select></label>
+              <label>Descrição<textarea name="description" rows="4"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelTaskEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
                 <button class="primary" id="taskSubmit" type="submit">Criar atividade</button>
@@ -180,25 +180,25 @@
           <div class="content-grid side-form hidden" id="assignmentTab">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Distribuicao mensal por cliente</h2>
+                <h2>Distribuição mensal por cliente</h2>
                 <div class="panel-actions">
                   <span id="assignmentCount"></span>
-                  <button class="primary compact" data-open-modal="assignmentForm" type="button"><i data-lucide="plus"></i>Nova distribuicao</button>
+                  <button class="primary compact" data-open-modal="assignmentForm" type="button"><i data-lucide="plus"></i>Nova distribuição</button>
                 </div>
               </div>
               <div class="assignment-grid" id="assignmentGrid"></div>
             </section>
             <form class="panel form-panel modal-card hidden" id="assignmentForm">
               <button class="modal-close" data-close-modal type="button">X</button>
-              <h2 id="assignmentFormTitle">Nova distribuicao</h2>
+              <h2 id="assignmentFormTitle">Nova distribuição</h2>
               <input type="hidden" name="id" />
-              <label>Mes<input required type="month" name="month" /></label>
+              <label>Mês<input required type="month" name="month" /></label>
               <label>Cliente<select required name="client" id="assignmentClientSelect"></select></label>
-              <label>Responsaveis<select required multiple name="people" id="assignmentPeopleSelect"></select></label>
-              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <label>Responsáveis<select required multiple name="people" id="assignmentPeopleSelect"></select></label>
+              <label>Observação<textarea name="note" rows="3"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelAssignmentEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
-                <button class="primary" id="assignmentSubmit" type="submit">Salvar distribuicao</button>
+                <button class="primary" id="assignmentSubmit" type="submit">Salvar distribuição</button>
               </div>
             </form>
           </div>
@@ -218,12 +218,12 @@
               <details class="filter-panel" open>
                 <summary>Filtros</summary>
                 <div class="filter-grid">
-                  <label>Competencia<input id="reimbursementPeriodFilter" type="month" /></label>
-                  <label>Status<select id="reimbursementStatusFilter"><option value="">Todos</option><option>Pendente</option><option>Em analise</option><option>Pago</option><option>Vencido</option></select></label>
+                  <label>Competência<input id="reimbursementPeriodFilter" type="month" /></label>
+                  <label>Status<select id="reimbursementStatusFilter"><option value="">Todos</option><option>Pendente</option><option>Em análise</option><option>Pago</option><option>Vencido</option></select></label>
                   <label>Cliente<select id="reimbursementClientFilter"></select></label>
-                  <label>Responsavel<select id="reimbursementPersonFilter"></select></label>
-                  <label>Tipo<select id="reimbursementTypeFilter"><option value="">Todos</option><option>Custas</option><option>Diligencia</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
-                  <label>Buscar<input id="reimbursementTextFilter" type="search" placeholder="Descricao ou no documento" /></label>
+                  <label>Responsável<select id="reimbursementPersonFilter"></select></label>
+                  <label>Tipo<select id="reimbursementTypeFilter"><option value="">Todos</option><option>Custas</option><option>Diligência</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
+                  <label>Buscar<input id="reimbursementTextFilter" type="search" placeholder="Descrição ou nº do documento" /></label>
                 </div>
                 <button class="secondary" id="clearReimbursementFilters" type="button"><i data-lucide="filter-x"></i>Limpar filtros</button>
               </details>
@@ -231,15 +231,15 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>Competencia</th>
-                      <th>Descricao</th>
+                      <th>Competência</th>
+                      <th>Descrição</th>
                       <th>Cliente</th>
-                      <th>Responsavel</th>
+                      <th>Responsável</th>
                       <th>Vencimento</th>
                       <th>Valor</th>
                       <th>Status</th>
-                      <th>No Doc.</th>
-                      <th>Acoes</th>
+                      <th>Nº Doc.</th>
+                      <th>Ações</th>
                     </tr>
                   </thead>
                   <tbody id="reimbursementsTable"></tbody>
@@ -250,16 +250,16 @@
               <button class="modal-close" data-close-modal type="button">X</button>
               <h2 id="reimbursementFormTitle">Novo reembolso</h2>
               <input type="hidden" name="id" />
-              <label>Competencia<input required type="month" name="period" /></label>
+              <label>Competência<input required type="month" name="period" /></label>
               <label>Vencimento<input type="date" name="due_date" /></label>
-              <label>Descricao<input required name="description" placeholder="Ex: Custas de distribuicao - Processo no 1234/2024" /></label>
-              <label>Tipo de despesa<select name="expense_type"><option>Custas</option><option>Diligencia</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
+              <label>Descrição<input required name="description" placeholder="Ex: Custas de distribuição - Processo nº 1234/2024" /></label>
+              <label>Tipo de despesa<select name="expense_type"><option>Custas</option><option>Diligência</option><option>Taxa</option><option>Viagem</option><option>Outros</option></select></label>
               <label>Cliente<select required name="client" id="reimbursementClientSelect"></select></label>
-              <label>Responsavel<select required name="person" id="reimbursementPersonSelect"></select></label>
+              <label>Responsável<select required name="person" id="reimbursementPersonSelect"></select></label>
               <label>Valor<input required type="number" min="0" step="0.01" name="amount" /></label>
-              <label>Status<select name="status"><option>Pendente</option><option>Em analise</option><option>Pago</option><option>Vencido</option></select></label>
-              <label>No Documento / NF / Recibo<input name="document_number" placeholder="Ex: NF-001234" /></label>
-              <label>Observacoes<textarea name="notes" rows="3"></textarea></label>
+              <label>Status<select name="status"><option>Pendente</option><option>Em análise</option><option>Pago</option><option>Vencido</option></select></label>
+              <label>Nº Documento / NF / Recibo<input name="document_number" placeholder="Ex: NF-001234" /></label>
+              <label>Observações<textarea name="notes" rows="3"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelReimbursementEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
                 <button class="primary" id="reimbursementSubmit" type="submit">Cadastrar reembolso</button>
@@ -272,26 +272,26 @@
           <div class="content-grid side-form">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Ferias</h2>
+                <h2>Férias</h2>
                 <div class="panel-actions">
                   <span id="vacationCount"></span>
-                  <button class="primary compact" data-open-modal="vacationForm" type="button"><i data-lucide="plus"></i>Novo periodo</button>
+                  <button class="primary compact" data-open-modal="vacationForm" type="button"><i data-lucide="plus"></i>Novo período</button>
                 </div>
               </div>
               <div class="calendar-list" id="vacationList"></div>
             </section>
             <form class="panel form-panel modal-card hidden" id="vacationForm">
               <button class="modal-close" data-close-modal type="button">X</button>
-              <h2 id="vacationFormTitle">Novo periodo</h2>
+              <h2 id="vacationFormTitle">Novo período</h2>
               <input type="hidden" name="id" />
               <label>Colaborador<select required name="person" id="vacationPersonSelect"></select></label>
-              <label>Inicio<input required type="date" name="start" /></label>
+              <label>Início<input required type="date" name="start" /></label>
               <label>Fim<input required type="date" name="end" /></label>
-              <label>Status<select name="status"><option>Programada</option><option>Solicitada</option><option>Aprovada</option><option>Concluida</option></select></label>
-              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <label>Status<select name="status"><option>Programada</option><option>Solicitada</option><option>Aprovada</option><option>Concluída</option></select></label>
+              <label>Observação<textarea name="note" rows="3"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelVacationEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
-                <button class="primary" id="vacationSubmit" type="submit">Registrar ferias</button>
+                <button class="primary" id="vacationSubmit" type="submit">Registrar férias</button>
               </div>
             </form>
           </div>
@@ -303,7 +303,7 @@
               <div class="panel-heading">
                 <h2>Home office</h2>
                 <div class="panel-actions">
-                  <span>10 baias disponiveis na sala</span>
+                  <span>10 baias disponíveis na sala</span>
                   <button class="primary compact" data-open-modal="homeOfficeForm" type="button"><i data-lucide="plus"></i>Novo ajuste</button>
                 </div>
               </div>
@@ -340,7 +340,7 @@
               <label>Colaborador<select required name="person" id="homeOfficePersonSelect"></select></label>
               <label>Data<input required type="date" name="date" /></label>
               <label>Tipo<select name="action_type"><option>Home office extra</option><option>Presencial extra</option><option>Troca de dia</option><option>Consulta de vaga</option></select></label>
-              <label>Observacao<textarea name="note" rows="3"></textarea></label>
+              <label>Observação<textarea name="note" rows="3"></textarea></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelHomeOfficeEdit" type="button"><i data-lucide="x"></i>Cancelar</button>
                 <button class="primary" id="homeOfficeSubmit" type="submit">Registrar ajuste</button>
@@ -367,7 +367,7 @@
               <input type="hidden" name="id" />
               <label>Cliente<select required name="client" id="documentClientSelect"></select></label>
               <label>Nome do documento<input required name="name" /></label>
-              <label>Tipo<select name="type"><option>Passo a passo</option><option>Padrao de atividade</option><option>Modelo</option><option>Orientacao</option></select></label>
+              <label>Tipo<select name="type"><option>Passo a passo</option><option>Padrão de atividade</option><option>Modelo</option><option>Orientação</option></select></label>
               <label>Anexo<input name="document_file" type="file" accept=".pdf,.ppt,.pptx,.xls,.xlsx,.csv,.doc,.docx,.txt,.png,.jpg,.jpeg" /></label>
               <label>Link ou caminho<input name="link" placeholder="https:// ou pasta interna" /></label>
               <div class="form-actions">
@@ -395,9 +395,9 @@
               <h2 id="teamFormTitle">Novo membro</h2>
               <input type="hidden" name="id" />
               <label>Nome<input required name="name" /></label>
-              <label>Funcao<input required name="role" /></label>
+              <label>Função<input required name="role" /></label>
               <label>E-mail<input type="email" name="email" /></label>
-              <label>Dias fixos de home office<select multiple name="fixed_home_days" id="teamHomeDaysSelect"><option value="1">Segunda</option><option value="2">Terca</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option></select></label>
+              <label>Dias fixos de home office<select multiple name="fixed_home_days" id="teamHomeDaysSelect"><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option></select></label>
               <label>Status<select name="status"><option>Ativo</option><option>Ausente</option><option>Inativo</option></select></label>
               <div class="form-actions">
                 <button class="secondary hidden" id="cancelTeamEdit" type="button"><i data-lucide="x"></i>Cancelar</button>

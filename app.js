@@ -31,7 +31,7 @@ let currentUser = null;
 let currentMember = null;
 let calendarCursor = new Date();
 let selectedCalendarDate = new Date().toISOString().slice(0, 10);
-const TASK_STATUSES = ["A Fazer", "Em Andamento", "Em Revisao", "Concluido"];
+const TASK_STATUSES = ["A Fazer", "Em Andamento", "Em Revisão", "Concluído"];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -106,7 +106,7 @@ function fullSignupName() {
 }
 
 function displayUserName() {
-  return currentMember?.name || currentUser?.user_metadata?.full_name || "Usuario";
+  return currentMember?.name || currentUser?.user_metadata?.full_name || "Usuário";
 }
 
 function refreshIcons() {
@@ -118,11 +118,11 @@ function icon(name) {
 }
 
 function clientName(id) {
-  return state.clients.find((client) => client.id === id)?.name || "Cliente nao encontrado";
+  return state.clients.find((client) => client.id === id)?.name || "Cliente não encontrado";
 }
 
 function personName(id) {
-  return state.people.find((person) => person.id === id)?.name || "Pessoa nao encontrada";
+  return state.people.find((person) => person.id === id)?.name || "Pessoa não encontrada";
 }
 
 function peopleChips(ids = []) {
@@ -130,7 +130,7 @@ function peopleChips(ids = []) {
 }
 
 function weekdayName(value) {
-  const names = { 1: "Segunda", 2: "Terca", 3: "Quarta", 4: "Quinta", 5: "Sexta" };
+  const names = { 1: "Segunda", 2: "Terça", 3: "Quarta", 4: "Quinta", 5: "Sexta" };
   return names[String(value)] || value;
 }
 
@@ -139,7 +139,10 @@ function homeDaysText(days = []) {
 }
 
 function statusClass(status) {
-  return (status || "").replaceAll(" ", "-");
+  return (status || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(" ", "-");
 }
 
 function taskStatus(status) {
@@ -149,7 +152,9 @@ function taskStatus(status) {
     "Fazendo": "Em Andamento",
     "Em andamento": "Em Andamento",
     "Aguardando cliente": "A Fazer",
-    "Concluida": "Concluido",
+    "Em Revisao": "Em Revisão",
+    "Concluida": "Concluído",
+    "Concluído": "Concluído",
     "Atrasada": "A Fazer"
   };
   return aliases[status] || status || "A Fazer";
@@ -158,6 +163,14 @@ function taskStatus(status) {
 function taskStatusOptions(selectedStatus) {
   const selected = taskStatus(selectedStatus);
   return TASK_STATUSES.map((status) => `<option value="${status}" ${status === selected ? "selected" : ""}>${status}</option>`).join("");
+}
+
+function reimbursementStatus(status) {
+  return status === "Em analise" ? "Em análise" : status;
+}
+
+function vacationStatus(status) {
+  return status === "Concluida" ? "Concluída" : status;
 }
 
 function toast(message) {
@@ -259,7 +272,7 @@ async function deleteRecord(key, id) {
 async function uploadDocumentFile(file, clientId) {
   if (!file || !file.name) return null;
   if (!hasSupabaseConfig) {
-    toast("Anexo selecionado apenas para teste local. No site publicado, o arquivo sera salvo no Supabase.");
+    toast("Anexo selecionado apenas para teste local. No site publicado, o arquivo será salvo no Supabase.");
     return {
       file_name: file.name,
       file_type: file.type || "Arquivo",
@@ -315,24 +328,24 @@ function fillAllSelects() {
     "#homeOfficePersonSelect"
   ].forEach((selector) => fillSelect($(selector), state.people));
 
-  fillSelect($("#reimbursementPersonFilter"), state.people, "Todos os responsaveis");
+  fillSelect($("#reimbursementPersonFilter"), state.people, "Todos os responsáveis");
   fillSelect($("#taskClientFilter"), state.clients, "Todos os clientes");
 }
 
 function renderDashboard() {
-  const pendingTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluido");
+  const pendingTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluído");
   const inProgressTasks = state.tasks.filter((task) => taskStatus(task.status) === "Em Andamento");
-  const completedTasks = state.tasks.filter((task) => taskStatus(task.status) === "Concluido");
+  const completedTasks = state.tasks.filter((task) => taskStatus(task.status) === "Concluído");
   const today = new Date().toISOString().slice(0, 10);
-  const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluido" && task.due_date && task.due_date < today);
+  const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluído" && task.due_date && task.due_date < today);
   const firstName = displayUserName().split(" ")[0];
-  $("#dashboardGreeting").textContent = `Ola, ${firstName}`;
+  $("#dashboardGreeting").textContent = `Olá, ${firstName}`;
   $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   $("#metricsGrid").innerHTML = [
     ["Total de Atividades", state.tasks.length, "square-check-big", ""],
     ["Em Andamento", inProgressTasks.length, "clock", "icon-blue"],
-    ["Concluidas", completedTasks.length, "trending-up", "icon-green"],
+    ["Concluídas", completedTasks.length, "trending-up", "icon-green"],
     ["Atrasadas", overdueTasks.length, "circle-alert", "icon-red"]
   ].map(([label, value, icon, theme]) => `
     <article class="metric ${theme}">
@@ -344,13 +357,13 @@ function renderDashboard() {
 
   $("#todayLabel").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
   $("#dashboardTasks").innerHTML = state.tasks
-    .filter((task) => taskStatus(task.status) !== "Concluido")
+    .filter((task) => taskStatus(task.status) !== "Concluído")
     .slice(0, 5)
     .map((task) => taskCard(task, false))
     .join("") || `<div class="empty">Nenhuma atividade aberta.</div>`;
 
   const agenda = [
-    ...state.vacations.map((item) => ({ type: "Ferias", date: item.start_date, title: personName(item.person_id), text: `${formatDate(item.start_date)} a ${formatDate(item.end_date)}` })),
+    ...state.vacations.map((item) => ({ type: "Férias", date: item.start_date, title: personName(item.person_id), text: `${formatDate(item.start_date)} a ${formatDate(item.end_date)}` })),
     ...state.homeOffice.map((item) => ({ type: "Home office", date: item.work_date, title: personName(item.person_id), text: `${formatDate(item.work_date)} - ${item.action_type || "Ajuste"}` }))
   ].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -371,7 +384,7 @@ function taskCard(task, editable = true) {
       <div class="task-meta">
         <span class="badge ${statusClass(currentStatus)}">${currentStatus}</span>
         <span>${icon("building-2")}${clientName(task.client_id)}</span>
-        <span>${icon("calendar") }Prazo: ${formatDate(task.due_date)}</span>
+        <span>${icon("calendar")}Prazo: ${formatDate(task.due_date)}</span>
         <span>${task.priority}</span>
       </div>
       <div>${peopleChips(task.people_ids)}</div>
@@ -446,7 +459,7 @@ function renderAssignments() {
         <button class="danger" type="button" data-delete-assignment="${item.id}">${icon("trash-2")}Excluir</button>
       </div>
     </article>
-  `).join("") || `<div class="empty">Nenhuma distribuicao cadastrada.</div>`;
+  `).join("") || `<div class="empty">Nenhuma distribuição cadastrada.</div>`;
 }
 
 function filteredReimbursements() {
@@ -460,7 +473,7 @@ function filteredReimbursements() {
   return state.reimbursements.filter((item) => {
     const haystack = `${item.description || ""} ${item.document_number || ""} ${clientName(item.client_id)} ${personName(item.person_id)}`.toLowerCase();
     return (!period || item.period === period)
-      && (!status || item.status === status)
+      && (!status || reimbursementStatus(item.status) === status)
       && (!client || item.client_id === client)
       && (!person || item.person_id === person)
       && (!type || item.expense_type === type)
@@ -471,7 +484,7 @@ function filteredReimbursements() {
 function renderReimbursements() {
   const items = filteredReimbursements();
   const total = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const pending = items.filter((item) => item.status === "Pendente" || item.status === "Em analise").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pending = items.filter((item) => item.status === "Pendente" || reimbursementStatus(item.status) === "Em análise").reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const paid = items.filter((item) => item.status === "Pago").reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const overdue = items.filter((item) => item.status === "Vencido").reduce((sum, item) => sum + Number(item.amount || 0), 0);
   $("#reimbursementMetrics").innerHTML = [
@@ -490,7 +503,7 @@ function renderReimbursements() {
       <td>${personName(item.person_id)}</td>
       <td>${formatDate(item.due_date)}</td>
       <td><strong>${money(item.amount)}</strong></td>
-      <td><span class="badge ${statusClass(item.status)}">${item.status}</span></td>
+      <td><span class="badge ${statusClass(reimbursementStatus(item.status))}">${reimbursementStatus(item.status)}</span></td>
       <td>${item.document_number || "-"}</td>
       <td>
         <div class="row-actions">
@@ -503,10 +516,10 @@ function renderReimbursements() {
 }
 
 function renderVacations() {
-  $("#vacationCount").textContent = `${state.vacations.length} periodos`;
+  $("#vacationCount").textContent = `${state.vacations.length} períodos`;
   $("#vacationList").innerHTML = state.vacations.map((item) => `
     <article class="calendar-item">
-      <span class="badge ${statusClass(item.status)}">${item.status}</span>
+      <span class="badge ${statusClass(vacationStatus(item.status))}">${vacationStatus(item.status)}</span>
       <h3>${personName(item.person_id)}</h3>
       <p class="small">${formatDate(item.start_date)} a ${formatDate(item.end_date)}</p>
       ${item.note ? `<p>${item.note}</p>` : ""}
@@ -515,7 +528,7 @@ function renderVacations() {
         <button class="danger" type="button" data-delete-vacation="${item.id}">${icon("trash-2")}Excluir</button>
       </div>
     </article>
-  `).join("") || `<div class="empty">Nenhum periodo cadastrado.</div>`;
+  `).join("") || `<div class="empty">Nenhum período cadastrado.</div>`;
 }
 
 function renderHomeOffice() {
@@ -633,7 +646,7 @@ function renderCalendarDetail() {
     ? [
         ...state.vacations
           .filter((item) => item.start_date <= periodEnd && item.end_date >= periodStart)
-          .map((item) => `Ferias: ${personName(item.person_id)} (${formatDate(item.start_date)} a ${formatDate(item.end_date)})`),
+          .map((item) => `Férias: ${personName(item.person_id)} (${formatDate(item.start_date)} a ${formatDate(item.end_date)})`),
         ...state.homeOffice
           .filter((item) => item.work_date >= periodStart && item.work_date <= periodEnd)
           .map((item) => `${item.action_type || "Ajuste"}: ${personName(item.person_id)} (${formatDate(item.work_date)})`)
@@ -648,11 +661,11 @@ function renderCalendarDetail() {
     </div>
     <div class="calendar-detail-block">
       <strong>Home office fixo</strong>
-      <p class="small">${fixedHome.length ? fixedHome.map((person) => person.name).join(", ") : "Ninguem em home fixo."}</p>
+      <p class="small">${fixedHome.length ? fixedHome.map((person) => person.name).join(", ") : "Ninguém em home fixo."}</p>
     </div>
     <div class="calendar-detail-block">
-      <strong>Ferias</strong>
-      <p class="small">${vacations.length ? vacations.map((item) => personName(item.person_id)).join(", ") : "Nenhuma ferias marcada."}</p>
+      <strong>Férias</strong>
+      <p class="small">${vacations.length ? vacations.map((item) => personName(item.person_id)).join(", ") : "Nenhuma férias marcada."}</p>
     </div>
     <div class="calendar-detail-block">
       <strong>Ajustes e trocas</strong>
@@ -663,7 +676,7 @@ function renderCalendarDetail() {
     </div>
     ${periodItems.length ? `
       <div class="calendar-detail-block">
-        <strong>Periodo selecionado</strong>
+        <strong>Período selecionado</strong>
         <p class="small">${periodItems.join("<br>")}</p>
       </div>
     ` : ""}
@@ -723,10 +736,10 @@ function renderSession() {
   $("#loginScreen").classList.toggle("hidden", signedIn);
   $("#appShell").classList.toggle("hidden", !signedIn);
   $("#currentUserName").textContent = signedIn ? displayUserName() : "";
-  $("#sidebarUserName").textContent = signedIn ? displayUserName() : "Usuario";
+  $("#sidebarUserName").textContent = signedIn ? displayUserName() : "Usuário";
   $("#sidebarUserInitial").textContent = (signedIn ? displayUserName() : "S").slice(0, 1).toUpperCase();
   $("#authHint").textContent = hasSupabaseConfig
-    ? "Use seu e-mail e senha. Se ainda nao tiver acesso, crie a primeira conta ou solicite cadastro."
+    ? "Use seu e-mail e senha. Se ainda não tiver acesso, crie a primeira conta ou solicite cadastro."
     : "Modo local de teste. Configure o Supabase para publicar com banco de dados compartilhado.";
   $("#loginMode").classList.toggle("active", authMode === "login");
   $("#signupMode").classList.toggle("active", authMode === "signup");
@@ -834,7 +847,7 @@ function resetTaskForm(close = false) {
 }
 
 function resetAssignmentForm(close = false) {
-  resetEditForm("assignmentForm", "assignmentFormTitle", "Nova distribuicao", "assignmentSubmit", "Salvar distribuicao", "cancelAssignmentEdit", close);
+  resetEditForm("assignmentForm", "assignmentFormTitle", "Nova distribuição", "assignmentSubmit", "Salvar distribuição", "cancelAssignmentEdit", close);
 }
 
 function resetReimbursementForm(close = false) {
@@ -842,7 +855,7 @@ function resetReimbursementForm(close = false) {
 }
 
 function resetVacationForm(close = false) {
-  resetEditForm("vacationForm", "vacationFormTitle", "Novo periodo", "vacationSubmit", "Registrar ferias", "cancelVacationEdit", close);
+  resetEditForm("vacationForm", "vacationFormTitle", "Novo período", "vacationSubmit", "Registrar férias", "cancelVacationEdit", close);
 }
 
 function resetHomeOfficeForm(close = false) {
@@ -873,7 +886,7 @@ function editClient(id) {
   form.elements.status.value = client.status || "Ativo";
   form.elements.notes.value = client.notes || "";
   $("#clientFormTitle").textContent = "Editar cliente";
-  $("#clientSubmit").textContent = "Salvar alteracoes";
+  $("#clientSubmit").textContent = "Salvar alterações";
   $("#cancelClientEdit").classList.remove("hidden");
   openModal("clientForm", { reset: false });
 }
@@ -891,7 +904,7 @@ function editTeamMember(id) {
     option.selected = (person.fixed_home_days || []).includes(option.value);
   });
   $("#teamFormTitle").textContent = "Editar membro";
-  $("#teamSubmit").textContent = "Salvar alteracoes";
+  $("#teamSubmit").textContent = "Salvar alterações";
   $("#cancelTeamEdit").classList.remove("hidden");
   openModal("teamForm", { reset: false });
 }
@@ -905,12 +918,12 @@ function editTask(id) {
   form.elements.client.value = task.client_id || "";
   setSelectedValues(form.elements.people, task.people_ids || []);
   form.elements.category.value = task.category || "Reembolso";
-  form.elements.priority.value = task.priority || "Media";
+  form.elements.priority.value = task.priority === "Media" ? "Média" : task.priority || "Média";
   form.elements.due.value = task.due_date || "";
   form.elements.status.value = taskStatus(task.status);
   form.elements.description.value = task.description || "";
   $("#taskFormTitle").textContent = "Editar atividade";
-  $("#taskSubmit").textContent = "Salvar alteracoes";
+  $("#taskSubmit").textContent = "Salvar alterações";
   $("#cancelTaskEdit").classList.remove("hidden");
   openModal("taskForm", { reset: false });
 }
@@ -924,8 +937,8 @@ function editAssignment(id) {
   form.elements.client.value = item.client_id || "";
   setSelectedValues(form.elements.people, item.people_ids || []);
   form.elements.note.value = item.note || "";
-  $("#assignmentFormTitle").textContent = "Editar distribuicao";
-  $("#assignmentSubmit").textContent = "Salvar alteracoes";
+  $("#assignmentFormTitle").textContent = "Editar distribuição";
+  $("#assignmentSubmit").textContent = "Salvar alterações";
   $("#cancelAssignmentEdit").classList.remove("hidden");
   openModal("assignmentForm", { reset: false });
 }
@@ -938,15 +951,15 @@ function editReimbursement(id) {
   form.elements.period.value = item.period || "";
   form.elements.due_date.value = item.due_date || "";
   form.elements.description.value = item.description || "";
-  form.elements.expense_type.value = item.expense_type || "Custas";
+  form.elements.expense_type.value = item.expense_type === "Diligencia" ? "Diligência" : item.expense_type || "Custas";
   form.elements.client.value = item.client_id || "";
   form.elements.person.value = item.person_id || "";
   form.elements.amount.value = item.amount || "";
-  form.elements.status.value = item.status || "Pendente";
+  form.elements.status.value = reimbursementStatus(item.status) || "Pendente";
   form.elements.document_number.value = item.document_number || "";
   form.elements.notes.value = item.notes || "";
   $("#reimbursementFormTitle").textContent = "Editar reembolso";
-  $("#reimbursementSubmit").textContent = "Salvar alteracoes";
+  $("#reimbursementSubmit").textContent = "Salvar alterações";
   $("#cancelReimbursementEdit").classList.remove("hidden");
   openModal("reimbursementForm", { reset: false });
 }
@@ -959,10 +972,10 @@ function editVacation(id) {
   form.elements.person.value = item.person_id || "";
   form.elements.start.value = item.start_date || "";
   form.elements.end.value = item.end_date || "";
-  form.elements.status.value = item.status || "Programada";
+  form.elements.status.value = vacationStatus(item.status) || "Programada";
   form.elements.note.value = item.note || "";
-  $("#vacationFormTitle").textContent = "Editar periodo";
-  $("#vacationSubmit").textContent = "Salvar alteracoes";
+  $("#vacationFormTitle").textContent = "Editar período";
+  $("#vacationSubmit").textContent = "Salvar alterações";
   $("#cancelVacationEdit").classList.remove("hidden");
   openModal("vacationForm", { reset: false });
 }
@@ -977,7 +990,7 @@ function editHomeOffice(id) {
   form.elements.action_type.value = item.action_type || "Home office extra";
   form.elements.note.value = item.note || "";
   $("#homeOfficeFormTitle").textContent = "Editar ajuste";
-  $("#homeOfficeSubmit").textContent = "Salvar alteracoes";
+  $("#homeOfficeSubmit").textContent = "Salvar alterações";
   $("#cancelHomeOfficeEdit").classList.remove("hidden");
   openModal("homeOfficeForm", { reset: false });
 }
@@ -989,11 +1002,11 @@ function editDocument(id) {
   form.elements.id.value = item.id;
   form.elements.client.value = item.client_id || "";
   form.elements.name.value = item.name || "";
-  form.elements.type.value = item.type || "Passo a passo";
+  form.elements.type.value = item.type === "Padrao de atividade" ? "Padrão de atividade" : item.type === "Orientacao" ? "Orientação" : item.type || "Passo a passo";
   form.elements.link.value = item.link || "";
   form.elements.document_file.value = "";
   $("#documentFormTitle").textContent = "Editar documento";
-  $("#documentSubmit").textContent = "Salvar alteracoes";
+  $("#documentSubmit").textContent = "Salvar alterações";
   $("#cancelDocumentEdit").classList.remove("hidden");
   openModal("documentForm", { reset: false });
 }
@@ -1021,7 +1034,7 @@ async function deleteTask(id) {
   await deleteRecord("tasks", id);
   if (isSignedIn()) await loadRemoteState();
   renderAll();
-  toast("Atividade excluida.");
+  toast("Atividade excluída.");
 }
 
 async function deleteEntity(key, id, message, confirmMessage = "Excluir este registro?") {
@@ -1095,7 +1108,7 @@ function setupForms() {
         note: data.note
       };
       return data.id ? updateRecord("assignments", data.id, payload) : insertRecord("assignments", payload);
-    }, event.currentTarget.elements.id.value ? "Distribuicao atualizada." : "Distribuicao salva.");
+    }, event.currentTarget.elements.id.value ? "Distribuição atualizada." : "Distribuição salva.");
     resetAssignmentForm();
   });
 
@@ -1130,7 +1143,7 @@ function setupForms() {
         note: data.note
       };
       return data.id ? updateRecord("vacations", data.id, payload) : insertRecord("vacations", payload);
-    }, event.currentTarget.elements.id.value ? "Ferias atualizadas." : "Ferias registradas.");
+    }, event.currentTarget.elements.id.value ? "Férias atualizadas." : "Férias registradas.");
     resetVacationForm();
   });
 
@@ -1229,7 +1242,7 @@ function setupFilters() {
       editAssignment(editButton.dataset.editAssignment);
       return;
     }
-    if (deleteButton) await deleteEntity("assignments", deleteButton.dataset.deleteAssignment, "Distribuicao excluida.");
+    if (deleteButton) await deleteEntity("assignments", deleteButton.dataset.deleteAssignment, "Distribuição excluída.");
   });
 
   $("#reimbursementsTable").addEventListener("click", async (event) => {
@@ -1239,7 +1252,7 @@ function setupFilters() {
       editReimbursement(editButton.dataset.editReimbursement);
       return;
     }
-    if (deleteButton) await deleteEntity("reimbursements", deleteButton.dataset.deleteReimbursement, "Reembolso excluido.");
+    if (deleteButton) await deleteEntity("reimbursements", deleteButton.dataset.deleteReimbursement, "Reembolso excluído.");
   });
 
   $("#vacationList").addEventListener("click", async (event) => {
@@ -1249,7 +1262,7 @@ function setupFilters() {
       editVacation(editButton.dataset.editVacation);
       return;
     }
-    if (deleteButton) await deleteEntity("vacations", deleteButton.dataset.deleteVacation, "Ferias excluidas.");
+    if (deleteButton) await deleteEntity("vacations", deleteButton.dataset.deleteVacation, "Férias excluídas.");
   });
 
   $("#homeOfficeList").addEventListener("click", async (event) => {
@@ -1259,7 +1272,7 @@ function setupFilters() {
       editHomeOffice(editButton.dataset.editHomeOffice);
       return;
     }
-    if (deleteButton) await deleteEntity("homeOffice", deleteButton.dataset.deleteHomeOffice, "Home office excluido.");
+    if (deleteButton) await deleteEntity("homeOffice", deleteButton.dataset.deleteHomeOffice, "Home office excluído.");
   });
 
   $("#documentsGrid").addEventListener("click", async (event) => {
@@ -1278,15 +1291,15 @@ function setupFilters() {
       await deleteRecord("documents", id);
       if (isSignedIn()) await loadRemoteState();
       renderAll();
-      toast("Documento excluido.");
+      toast("Documento excluído.");
     }
   });
 }
 
 function exportCsv() {
-  const rows = [["Competencia", "Descricao", "Cliente", "Responsavel", "Vencimento", "Tipo", "Valor", "Status", "No Doc."]];
+  const rows = [["Competência", "Descrição", "Cliente", "Responsável", "Vencimento", "Tipo", "Valor", "Status", "Nº Doc."]];
   filteredReimbursements().forEach((item) => {
-    rows.push([formatMonth(item.period), item.description || "", clientName(item.client_id), personName(item.person_id), formatDate(item.due_date), item.expense_type || "", item.amount, item.status, item.document_number || ""]);
+    rows.push([formatMonth(item.period), item.description || "", clientName(item.client_id), personName(item.person_id), formatDate(item.due_date), item.expense_type || "", item.amount, reimbursementStatus(item.status), item.document_number || ""]);
   });
   const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(";")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -1353,7 +1366,7 @@ async function submitAuth(event) {
         status: "Ativo"
       });
     }
-    toast("Conta criada. Confira o e-mail se a confirmacao estiver ativa.");
+    toast("Conta criada. Confira o e-mail se a confirmação estiver ativa.");
   } else {
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -1446,12 +1459,12 @@ function setupActions() {
       return;
     }
     if (deleteId) {
-      const confirmed = window.confirm("Excluir este cliente? Atividades e documentos vinculados tambem podem ser afetados.");
+      const confirmed = window.confirm("Excluir este cliente? Atividades e documentos vinculados também podem ser afetados.");
       if (!confirmed) return;
       await deleteRecord("clients", deleteId);
       await loadRemoteState();
       renderAll();
-      toast("Cliente excluido.");
+      toast("Cliente excluído.");
     }
   });
 
@@ -1471,14 +1484,14 @@ function setupActions() {
         ...state.homeOffice.filter((item) => item.person_id === deleteId)
       ];
       const message = linkedRecords.length
-        ? "Este membro possui registros vinculados. Excluir pode afetar atividades, reembolsos, ferias ou home office. Deseja continuar?"
+        ? "Este membro possui registros vinculados. Excluir pode afetar atividades, reembolsos, férias ou home office. Deseja continuar?"
         : "Excluir este membro da equipe?";
       const confirmed = window.confirm(message);
       if (!confirmed) return;
       await deleteRecord("people", deleteId);
       await loadRemoteState();
       renderAll();
-      toast("Membro excluido.");
+      toast("Membro excluído.");
     }
   });
 
@@ -1491,7 +1504,7 @@ function setupActions() {
     renderSession();
   });
   $("#loginForm").addEventListener("submit", (event) => {
-    submitAuth(event).catch((error) => toast(error.message || "Nao foi possivel acessar."));
+    submitAuth(event).catch((error) => toast(error.message || "Não foi possível acessar."));
   });
   $("#logout").addEventListener("click", async () => {
     if (hasSupabaseConfig) {
