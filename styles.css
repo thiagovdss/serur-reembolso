@@ -668,16 +668,23 @@ textarea {
 }
 
 .badge.Pendente,
-.badge.A-fazer {
+.badge.A-fazer,
+.badge.A-Fazer {
   color: #7c4a00;
   background: #fff0c6;
 }
 
 .badge.Em,
 .badge.Em-analise,
-.badge.Fazendo {
+.badge.Fazendo,
+.badge.Em-Andamento {
   color: #164f75;
   background: #dff1ff;
+}
+
+.badge.Em-Revisao {
+  color: #9a3a00;
+  background: #ffe3cc;
 }
 
 .badge.Concluida,
@@ -758,6 +765,21 @@ textarea {
   min-height: 34px;
   padding: 6px 8px;
   font-size: 12px;
+}
+
+.task-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.task-card-actions button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #ffc2bd;
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .timeline,

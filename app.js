@@ -31,7 +31,7 @@ let currentUser = null;
 let currentMember = null;
 let calendarCursor = new Date();
 let selectedCalendarDate = new Date().toISOString().slice(0, 10);
-const TASK_STATUSES = ["A fazer", "Fazendo", "Concluido", "Atrasada"];
+const TASK_STATUSES = ["A Fazer", "Em Andamento", "Em Revisao", "Concluido"];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -124,12 +124,15 @@ function statusClass(status) {
 
 function taskStatus(status) {
   const aliases = {
-    "Pendente": "A fazer",
-    "Em andamento": "Fazendo",
-    "Aguardando cliente": "A fazer",
-    "Concluida": "Concluido"
+    "Pendente": "A Fazer",
+    "A fazer": "A Fazer",
+    "Fazendo": "Em Andamento",
+    "Em andamento": "Em Andamento",
+    "Aguardando cliente": "A Fazer",
+    "Concluida": "Concluido",
+    "Atrasada": "A Fazer"
   };
-  return aliases[status] || status || "A fazer";
+  return aliases[status] || status || "A Fazer";
 }
 
 function taskStatusOptions(selectedStatus) {
@@ -266,16 +269,17 @@ function fillAllSelects() {
 
 function renderDashboard() {
   const pendingTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluido");
-  const inProgressTasks = state.tasks.filter((task) => taskStatus(task.status) === "Fazendo");
+  const inProgressTasks = state.tasks.filter((task) => taskStatus(task.status) === "Em Andamento");
   const completedTasks = state.tasks.filter((task) => taskStatus(task.status) === "Concluido");
-  const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) === "Atrasada");
+  const today = new Date().toISOString().slice(0, 10);
+  const overdueTasks = state.tasks.filter((task) => taskStatus(task.status) !== "Concluido" && task.due_date && task.due_date < today);
   const firstName = displayUserName().split(" ")[0];
   $("#dashboardGreeting").textContent = `Ola, ${firstName}`;
   $("#dashboardDate").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   $("#metricsGrid").innerHTML = [
     ["Total de Atividades", state.tasks.length, "square-check-big", ""],
-    ["Fazendo", inProgressTasks.length, "clock", "icon-blue"],
+    ["Em Andamento", inProgressTasks.length, "clock", "icon-blue"],
     ["Concluidas", completedTasks.length, "trending-up", "icon-green"],
     ["Atrasadas", overdueTasks.length, "circle-alert", "icon-red"]
   ].map(([label, value, icon, theme]) => `
@@ -325,6 +329,9 @@ function taskCard(task) {
           ${taskStatusOptions(currentStatus)}
         </select>
       </label>
+      <div class="task-card-actions">
+        <button class="danger" type="button" data-delete-task="${task.id}">Excluir</button>
+      </div>
     </article>
   `;
 }
@@ -774,6 +781,15 @@ async function changeTaskStatus(id, status) {
   toast("Andamento atualizado.");
 }
 
+async function deleteTask(id) {
+  const confirmed = window.confirm("Excluir esta atividade?");
+  if (!confirmed) return;
+  await deleteRecord("tasks", id);
+  if (isSignedIn()) await loadRemoteState();
+  renderAll();
+  toast("Atividade excluida.");
+}
+
 function setupForms() {
   $("#clientForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -901,10 +917,20 @@ function setupFilters() {
     if (!id) return;
     await changeTaskStatus(id, event.target.value);
   });
+  $("#taskColumns").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-delete-task]");
+    if (!button) return;
+    await deleteTask(button.dataset.deleteTask);
+  });
   $("#dashboardTasks").addEventListener("change", async (event) => {
     const id = event.target.dataset.taskStatus;
     if (!id) return;
     await changeTaskStatus(id, event.target.value);
+  });
+  $("#dashboardTasks").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-delete-task]");
+    if (!button) return;
+    await deleteTask(button.dataset.deleteTask);
   });
   [
     "#reimbursementPeriodFilter",

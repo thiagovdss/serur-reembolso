@@ -146,10 +146,10 @@
           <div class="toolbar">
             <select id="taskStatusFilter">
               <option value="">Todos os status</option>
-              <option>A fazer</option>
-              <option>Fazendo</option>
+              <option>A Fazer</option>
+              <option>Em Andamento</option>
+              <option>Em Revisao</option>
               <option>Concluido</option>
-              <option>Atrasada</option>
             </select>
             <select id="taskClientFilter"></select>
           </div>
@@ -164,7 +164,7 @@
               <label>Categoria<select name="category"><option>Reembolso</option><option>Atendimento</option><option>Consultoria</option><option>Administrativo</option><option>Financeiro</option></select></label>
               <label>Prioridade<select name="priority"><option>Media</option><option>Alta</option><option>Urgente</option><option>Baixa</option></select></label>
               <label>Prazo<input type="date" required name="due" /></label>
-              <label>Status<select name="status"><option>A fazer</option><option>Fazendo</option><option>Concluido</option></select></label>
+              <label>Status<select name="status"><option>A Fazer</option><option>Em Andamento</option><option>Em Revisao</option><option>Concluido</option></select></label>
               <label>Descricao<textarea name="description" rows="4"></textarea></label>
               <button class="primary" type="submit">Criar atividade</button>
             </form>
